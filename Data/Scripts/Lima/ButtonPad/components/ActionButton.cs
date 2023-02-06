@@ -4,9 +4,9 @@ using Sandbox.ModAPI.Interfaces;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Text;
-using System;
 using VRage.Game.ModAPI;
 using VRageMath;
+using VRage;
 
 namespace Lima
 {
@@ -23,13 +23,15 @@ namespace Lima
     private string _iconString = "";
     private string _statusText = "";
     private StringBuilder _name = new StringBuilder("");
-    Color _gray = new Color(128, 128, 128);
+    private Color _gray = new Color(128, 128, 128);
 
-    List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
+    private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
+    private int _index = -1;
 
-    public ActionButton(ButtonPadApp pad)
+    public ActionButton(ButtonPadApp pad, int index)
     {
       _padApp = pad;
+      _index = index;
 
       Button = new TouchEmptyButton(OnClickButton);
       Button.UseThemeColors = false;
@@ -110,6 +112,7 @@ namespace Lima
       else if (_padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed())
       {
         ClearAction();
+        _padApp.SelectActionConfirm();
         return;
       }
 
@@ -122,7 +125,7 @@ namespace Lima
       }
       else
       {
-        var hasConnection = MyAPIGateway.GridGroups.HasConnection(_padApp.Screen.Block.CubeGrid as IMyCubeGrid, _block.CubeGrid, GridLinkTypeEnum.Physical);
+        var hasConnection = MyAPIGateway.GridGroups.HasConnection(_padApp.Screen.Block.CubeGrid as IMyCubeGrid, _block.CubeGrid, GridLinkTypeEnum.Logical);
         if (hasConnection)
           ApplyAction(_block);
         else
@@ -171,7 +174,7 @@ namespace Lima
       _icon.SpriteImage = _iconString = iconString;
       var scale = (_padApp.Theme?.Scale ?? 1);
       var size = _icon.GetSize() / scale;
-      _icon.SpriteSize = new Vector2(Math.Min(size.X, size.Y));
+      _icon.SpriteSize = new Vector2(MathHelper.Min(size.X, size.Y));
       _icon.SpritePosition = new Vector2((size.X - _icon.SpriteSize.X) * 0.5f, 0);
     }
 
@@ -205,6 +208,8 @@ namespace Lima
     {
       var size = Button.GetSize();
       var defSize = text.Length > 6 ? 0.7f : 0.9f;
+      if (text.Length > 12)
+        defSize = 0.5f;
       _statusLabel.FontSize = (size.X * defSize) / 100;
       _statusLabel.Text = text;
       return text;
@@ -219,6 +224,11 @@ namespace Lima
       Button = null;
       _name = null;
       _blocks = null;
+    }
+
+    public MyTuple<int, string, long, string> GetTuple()
+    {
+      return new MyTuple<int, string, long, string>(_index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, _terminalAction?.Id ?? "");
     }
   }
 }

@@ -11,6 +11,7 @@ namespace Lima
     private int _rows = 3;
     private int _cols = 3;
     private List<ActionButton> _actionBts = new List<ActionButton>();
+    public List<ActionButton> ActionButtons { get { return _actionBts; } }
 
     public ButtonPadView(ButtonPadApp pad)
     {
@@ -40,7 +41,7 @@ namespace Lima
 
         for (int j = 0; j < _cols; j++)
         {
-          var actionBt = new ActionButton(_padApp);
+          var actionBt = new ActionButton(_padApp, i * _rows + j);
           _actionBts.Add(actionBt);
           actionBt.Button.Pixels = Vector2.Zero;
           actionBt.Button.Scale = Vector2.One;
