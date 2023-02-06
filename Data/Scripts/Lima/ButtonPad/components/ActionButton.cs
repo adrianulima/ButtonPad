@@ -150,6 +150,10 @@ namespace Lima
       blockGroup.GetBlocks(_blocks);
       _block = _blocks[0];
 
+      Button.Border = new Vector4(0, 2, 0, 0);
+      var darker7 = _padApp.Theme.GetMainColorDarker(7);
+      Button.BorderColor = darker7;
+
       UpdateAction(Utils.GetBlockGroupTexture(blockGroup));
     }
 
