@@ -146,6 +146,9 @@ namespace Lima.API
       AssignMethod(delegates, "TouchLabel_SetFontSize", ref apiDel.TouchLabel_SetFontSize);
       AssignMethod(delegates, "TouchLabel_GetAlignment", ref apiDel.TouchLabel_GetAlignment);
       AssignMethod(delegates, "TouchLabel_SetAlignment", ref apiDel.TouchLabel_SetAlignment);
+      AssignMethod(delegates, "TouchLabel_GetLines", ref apiDel.TouchLabel_GetLines);
+      AssignMethod(delegates, "TouchLabel_GetMaxLines", ref apiDel.TouchLabel_GetMaxLines);
+      AssignMethod(delegates, "TouchLabel_SetMaxLines", ref apiDel.TouchLabel_SetMaxLines);
       AssignMethod(delegates, "TouchBarContainer_New", ref apiDel.TouchBarContainer_New);
       AssignMethod(delegates, "TouchBarContainer_GetIsVertical", ref apiDel.TouchBarContainer_GetIsVertical);
       AssignMethod(delegates, "TouchBarContainer_SetIsVertical", ref apiDel.TouchBarContainer_SetIsVertical);
@@ -340,6 +343,9 @@ namespace Lima.API
     public Action<object, float> TouchLabel_SetFontSize;
     public Func<object, TextAlignment> TouchLabel_GetAlignment;
     public Action<object, TextAlignment> TouchLabel_SetAlignment;
+    public Func<object, int> TouchLabel_GetLines;
+    public Func<object, int> TouchLabel_GetMaxLines;
+    public Action<object, int> TouchLabel_SetMaxLines;
 
     public Func<bool, object> TouchBarContainer_New;
     public Func<object, bool> TouchBarContainer_GetIsVertical;
@@ -710,6 +716,8 @@ namespace Lima.API
     public Color? TextColor { get { return Api.TouchLabel_GetTextColor.Invoke(InternalObj); } set { Api.TouchLabel_SetTextColor.Invoke(InternalObj, (Color)value); } }
     public float FontSize { get { return Api.TouchLabel_GetFontSize.Invoke(InternalObj); } set { Api.TouchLabel_SetFontSize.Invoke(InternalObj, value); } }
     public TextAlignment Alignment { get { return Api.TouchLabel_GetAlignment.Invoke(InternalObj); } set { Api.TouchLabel_SetAlignment.Invoke(InternalObj, value); } }
+    public int Lines { get { return Api.TouchLabel_GetLines.Invoke(InternalObj); } }
+    public int MaxLines { get { return Api.TouchLabel_GetMaxLines.Invoke(InternalObj); } set { Api.TouchLabel_SetMaxLines.Invoke(InternalObj, value); } }
   }
   /// <summary>
   /// <see href="https://github.com/adrianulima/TouchScreenAPI/blob/main/Data/Scripts/Lima/Touch/UiKit/Elements/TouchBarContainer.cs"/>

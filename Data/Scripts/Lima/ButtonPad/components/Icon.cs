@@ -36,7 +36,7 @@ namespace Lima
         RotationOrScale = SpriteRotation,
         Color = SpriteColor ?? App.Theme.WhiteColor,
         Size = SpriteSize * scale,
-        Position = Position + Vector2.UnitY * SpriteSize.Y * 0.5f + SpritePosition
+        Position = Position + Vector2.UnitY * SpriteSize.Y * scale * 0.5f + SpritePosition * scale
       };
 
       GetSprites().Clear();

@@ -21,18 +21,41 @@ namespace Lima
       Padding = new Vector4(4);
       Gap = 4;
 
-      var maxSide = MathHelper.Max(pad.Viewport.Width, pad.Viewport.Height);
-      var minSide = MathHelper.Min(pad.Viewport.Width, pad.Viewport.Height);
-      var minSize = MathHelper.Min(minSide, maxSide > 256 ? 128 : 64);
-
-      _cols = MathHelper.FloorToInt(pad.Viewport.Width / minSize);
-      _rows = MathHelper.FloorToInt(pad.Viewport.Height / minSize);
-
       UpdateItems();
     }
 
-    public void UpdateItems()
+    public bool Reset()
     {
+      RemoveAllChildren();
+
+      var old = _actionBts;
+      _actionBts = null;
+      var changed = UpdateItems(old);
+
+      foreach (var actBt in old)
+        actBt.Dispose();
+      old.Clear();
+
+      return changed;
+    }
+
+    private bool UpdateItems(List<ActionButton> previous = null)
+    {
+      var maxSide = MathHelper.Max(_padApp.Viewport.Width, _padApp.Viewport.Height);
+      var minSide = MathHelper.Min(_padApp.Viewport.Width, _padApp.Viewport.Height);
+      var minSize = MathHelper.Min(minSide, maxSide > 256 ? 128 : 64) * _padApp.CustomScale;
+
+      var cols = _cols;
+      var rows = _rows;
+      _cols = MathHelper.FloorToInt(_padApp.Viewport.Width / minSize);
+      _rows = MathHelper.FloorToInt(_padApp.Viewport.Height / minSize);
+
+      if (_cols < 1) _cols = 1;
+      if (_rows < 1) _rows = 1;
+
+      if (_actionBts == null)
+        _actionBts = new List<ActionButton>();
+
       for (int i = 0; i < _rows; i++)
       {
         var rowView = new TouchView(ViewDirection.Row);
@@ -41,13 +64,27 @@ namespace Lima
 
         for (int j = 0; j < _cols; j++)
         {
-          var actionBt = new ActionButton(_padApp, i * _rows + j);
+          var index = i * _cols + j;
+          var actionBt = GetActionByIndex(previous, index);
           _actionBts.Add(actionBt);
-          actionBt.Button.Pixels = Vector2.Zero;
-          actionBt.Button.Scale = Vector2.One;
           rowView.AddChild(actionBt.Button);
         }
       }
+
+      return _rows != rows || _cols != cols;
+    }
+
+    private ActionButton GetActionByIndex(List<ActionButton> previous, int index)
+    {
+      var act = new ActionButton(_padApp, index);
+      act.CloneFrom(previous?.Find(item => item.Index == index));
+      return act;
+    }
+
+    private void RemoveAllChildren()
+    {
+      foreach (var row in Children)
+        RemoveChild(row);
     }
 
     public void Dispose()

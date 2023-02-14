@@ -102,9 +102,12 @@ namespace Lima
       {
         button.Label.Alignment = TextAlignment.LEFT;
         button.Direction = ViewDirection.Row;
-        button.Label.FontSize = 0.7f;
+        button.Label.FontSize = 0.6f;
         ScrollBar.Pixels = new Vector2(24, 0);
       }
+      if (button.Label.Text.Length > 25)
+        button.Label.FontSize = 0.45f;
+
       _buttons.Add(button);
 
       var iconSize = smallHeight ? height / 2 - 9 : 31;

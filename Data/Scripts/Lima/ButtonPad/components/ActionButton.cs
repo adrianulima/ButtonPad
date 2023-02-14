@@ -5,8 +5,8 @@ using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Text;
 using VRage.Game.ModAPI;
-using VRageMath;
 using VRage;
+using VRageMath;
 
 namespace Lima
 {
@@ -26,17 +26,19 @@ namespace Lima
     private Color _gray = new Color(128, 128, 128);
 
     private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
-    private int _index = -1;
+    public int Index = -1;
 
     public ActionButton(ButtonPadApp pad, int index)
     {
       _padApp = pad;
-      _index = index;
+      Index = index;
 
       Button = new TouchEmptyButton(OnClickButton);
       Button.UseThemeColors = false;
       Button.Alignment = ViewAlignment.Center;
       Button.Anchor = ViewAnchor.SpaceAround;
+      Button.Pixels = Vector2.Zero;
+      Button.Scale = Vector2.One;
 
       _icon = new Icon("", new Vector2(40), 0, _gray);
       _icon.Absolute = false;
@@ -53,12 +55,13 @@ namespace Lima
 
     private void Update()
     {
-      var ctrl = _padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed();
+      var ctrl = _padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed() && !MyAPIGateway.Input.IsAnyShiftKeyPressed();
 
       if ((!ctrl || !Button.Handler.IsMouseOver) && _icon.SpriteImage != _iconString)
       {
         _icon.SpriteImage = _iconString;
         SetBtText(_statusText);
+        UpdateBorderColor();
       }
 
       var disabled = false;
@@ -85,6 +88,7 @@ namespace Lima
           {
             _icon.SpriteColor = _gray;
             _icon.SpriteImage = "Cross";
+            Button.Border = Vector4.Zero;
             SetBtText("Clear");
             _statusLabel.TextColor = _padApp.Theme.WhiteColor;
           }
@@ -92,8 +96,7 @@ namespace Lima
         else if (_terminalAction != null & _block != null)
         {
           var text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
-          MyAPIGateway.Utilities.ShowNotification($"{text} - {_terminalAction.Name.ToString()}", 160);
-          // TODO: Low FPS can cause multiple notifications on screen, fix
+          _padApp.ShowNotification($"{text} - {_terminalAction.Name.ToString()}");
         }
         Button.BgColor = disabled ? _padApp.Theme.GetMainColorDarker(3) : hoverColor;
       }
@@ -130,6 +133,7 @@ namespace Lima
           ApplyAction(_block);
         else
           MyAPIGateway.Utilities.ShowNotification("Activation Failed", 3000, "Red");
+        // TODO: Consider move to app._notification
       }
 
       UpdateValue();
@@ -139,6 +143,14 @@ namespace Lima
     {
       if (block.IsFunctional)
         _terminalAction.Apply(block);
+    }
+
+    public void CloneFrom(ActionButton actBt)
+    {
+      if (actBt?._blockGroup != null)
+        SetAction(actBt._blockGroup, actBt._terminalAction);
+      else if (actBt?._block != null)
+        SetAction(actBt._block, actBt._terminalAction);
     }
 
     public void SetAction(IMyBlockGroup blockGroup, ITerminalAction terminalAction)
@@ -162,24 +174,23 @@ namespace Lima
       _block = block;
       _terminalAction = terminalAction;
 
+      UpdateBorderColor();
+      UpdateAction(Utils.GetBlockTexture(block));
+    }
+
+    private void UpdateBorderColor()
+    {
       var same = _block.CubeGrid.EntityId == _padApp.Screen.Block.CubeGrid.EntityId;
       var golden = new Color(Color.DarkGoldenrod * 0.2f, 1);
       Button.Border = new Vector4(0, 2, 0, 0);
       var darker7 = _padApp.Theme.GetMainColorDarker(7);
       Button.BorderColor = same ? darker7 : golden;
-
-      UpdateAction(Utils.GetBlockTexture(block));
     }
 
     private void UpdateAction(string iconString)
     {
-      UpdateValue();
-
       _icon.SpriteImage = _iconString = iconString;
-      var scale = (_padApp.Theme?.Scale ?? 1);
-      var size = _icon.GetSize() / scale;
-      _icon.SpriteSize = new Vector2(MathHelper.Min(size.X, size.Y));
-      _icon.SpritePosition = new Vector2((size.X - _icon.SpriteSize.X) * 0.5f, 0);
+      UpdateValue();
     }
 
     private void UpdateValue()
@@ -194,7 +205,8 @@ namespace Lima
       if (_block != null)
       {
         _terminalAction.WriteValue(_block, _name);
-        _statusText = SetBtText(_name.ToString());
+        _statusText = _name.ToString();
+        SetBtText(_statusText);
       }
     }
 
@@ -208,19 +220,28 @@ namespace Lima
       Button.Border = Vector4.Zero;
     }
 
-    private string SetBtText(string text)
+    Vector2 _prevSize = Vector2.Zero;
+    private void SetBtText(string text)
     {
+      var scale = (_padApp.Theme?.Scale ?? 1);
+      var sizeIcon = _icon.GetSize() / scale;
+      if (_statusLabel.Text == text && _prevSize == sizeIcon)
+        return;
+
+      _prevSize = sizeIcon;
+
       var size = Button.GetSize();
-      var defSize = text.Length > 6 ? 0.7f : 0.9f;
-      if (text.Length > 12)
-        defSize = 0.5f;
-      _statusLabel.FontSize = (size.X * defSize) / 100;
+      var defSize = text.Length > 12 ? 0.5f : 0.9f;
+      _statusLabel.FontSize = MathHelper.Min(1.5f, (size.X * defSize) / 100);
       _statusLabel.Text = text;
-      return text;
+
+      _icon.SpriteSize = new Vector2(MathHelper.Min(sizeIcon.X, sizeIcon.Y));
+      _icon.SpritePosition = (sizeIcon - _icon.SpriteSize) * 0.5f;
     }
 
     public void Dispose()
     {
+      Button.UnregisterUpdate(Update);
       ClearAction();
       _padApp = null;
       _statusLabel = null;
@@ -232,7 +253,7 @@ namespace Lima
 
     public MyTuple<int, string, long, string> GetTuple()
     {
-      return new MyTuple<int, string, long, string>(_index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, _terminalAction?.Id ?? "");
+      return new MyTuple<int, string, long, string>(Index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, _terminalAction?.Id ?? "");
     }
   }
 }

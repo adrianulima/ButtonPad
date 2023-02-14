@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
 using Lima.API;
 using Sandbox.ModAPI;
+using System.Collections.Generic;
+using System;
 using VRage.Game.ModAPI;
+using VRageMath;
 
 namespace Lima
 {
@@ -11,15 +12,20 @@ namespace Lima
     public List<ActionButton> ActionButtons { get { return _buttonsView.ActionButtons; } }
     public Action SaveConfigAction;
 
+    public float CustomScale = 1;
+
     private ButtonPadView _buttonsView;
     private SelectActionView _actionsView;
     private SelectBlockView _blocksView;
     private AppContent? _loadadeAppContent;
 
+    private IMyHudNotification _notification;
+
     public ButtonPadApp(Action saveConfigAction)
     {
       Direction = ViewDirection.Column;
 
+      _notification = MyAPIGateway.Utilities.CreateNotification(string.Empty);
       SaveConfigAction = saveConfigAction;
     }
 
@@ -40,13 +46,35 @@ namespace Lima
       RegisterUpdate(Update);
     }
 
+    int _prevWheel = 0;
+    bool _pressedInside = false;
     private void Update()
     {
       ApplyLoadedContent();
       _loadadeAppContent = null;
 
-      if (MyAPIGateway.Gui.IsCursorVisible || (!Screen.IsOnScreen && MyAPIGateway.Input.IsAnyMouseOrJoystickPressed()))
+      var anyPressed = MyAPIGateway.Input.IsAnyMouseOrJoystickPressed();
+
+      if (MyAPIGateway.Gui.IsCursorVisible || (!_pressedInside && !Screen.IsOnScreen && anyPressed))
         SelectActionConfirm(false);
+
+      _pressedInside = _pressedInside || (Screen.IsOnScreen && anyPressed);
+      if (!anyPressed)
+        _pressedInside = false;
+
+      var wheelDelta = MyAPIGateway.Input.MouseScrollWheelValue();
+      if (_buttonsView.Enabled && Screen.IsOnScreen && wheelDelta != _prevWheel && MyAPIGateway.Input.IsAnyCtrlKeyPressed() && MyAPIGateway.Input.IsAnyShiftKeyPressed())
+      {
+        var newScale = MathHelper.Min(2.25f, MathHelper.Max(0.75f, CustomScale + Math.Sign(wheelDelta - _prevWheel) * 0.25f));
+        var changed = false;
+        while (newScale != CustomScale && !changed)
+        {
+          CustomScale = newScale;
+          changed = _buttonsView.Reset();
+          newScale = MathHelper.Min(2.25f, MathHelper.Max(0.75f, CustomScale + Math.Sign(wheelDelta - _prevWheel) * 0.25f));
+        }
+      }
+      _prevWheel = wheelDelta;
     }
 
     public void ApplySettings(AppContent content)
@@ -59,11 +87,15 @@ namespace Lima
       if (_loadadeAppContent == null)
         return;
 
+      CustomScale = _loadadeAppContent?.CustomScale ?? 1;
+      if (CustomScale != 1)
+        _buttonsView.Reset();
       var count = _loadadeAppContent?.Buttons?.Count ?? 0;
       var terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Screen.Block.CubeGrid as IMyCubeGrid);
       if (terminalSystem == null)
         return;
 
+      count = (int)MathHelper.Min(count, _buttonsView.ActionButtons.Count);
       for (int i = 0; i < count; i++)
       {
         var index = _loadadeAppContent?.Buttons[i].Item1 ?? 0;
@@ -87,6 +119,14 @@ namespace Lima
       }
     }
 
+    public void ShowNotification(string text)
+    {
+      _notification.Hide();
+      _notification.Text = text;
+      _notification.AliveTime = 160;
+      _notification.Show();
+    }
+
     public void Dispose()
     {
       UnregisterUpdate(Update);
@@ -97,6 +137,7 @@ namespace Lima
       _blocksView = null;
       _actionsView = null;
       _loadadeAppContent = null;
+      _notification = null;
       SaveConfigAction = null;
       this.ForceDispose();
     }

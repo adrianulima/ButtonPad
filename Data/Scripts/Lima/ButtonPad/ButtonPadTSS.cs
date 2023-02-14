@@ -8,6 +8,7 @@ using VRage.Utils;
 using VRageMath;
 using System.Collections.Generic;
 using VRage;
+using VRage.Game.GUI.TextPanel;
 
 namespace Lima
 {
@@ -46,12 +47,10 @@ namespace Lima
 
       _app = new ButtonPadApp(SaveConfigAction);
       _app.InitApp(this.Block, this.Surface);
-      // var max = Math.Max(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y);
+
       if (this.Surface.SurfaceSize.X <= 256)
         _app.Theme.Scale = _app.Cursor.Scale = 0.75f;
       _app.CreateElements();
-      // _app.Theme.Scale = Math.Min(Math.Max(Math.Min(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y) / 512, 0.4f), 2);
-      // _app.Cursor.Scale = _app.Theme.Scale;
 
       var appContent = ButtonPadSession.Instance.BlockHandler.LoadAppContent(_block, _surface.Name);
       if (appContent != null)
@@ -86,6 +85,7 @@ namespace Lima
       var appContent = new AppContent()
       {
         SurfaceName = _surface.Name,
+        CustomScale = _app.CustomScale,
         Buttons = buttons
       };
 
@@ -111,9 +111,12 @@ namespace Lima
     {
       base.Dispose();
 
-      _app?.Dispose();
-      _terminalBlock.OnMarkForClose -= BlockMarkedForClose;
-      ButtonPadSession.Instance.NetBlockHandler.MessageReceivedEvent -= OnBlockContentReceived;
+      if (_init || _app != null)
+      {
+        _app?.Dispose();
+        _terminalBlock.OnMarkForClose -= BlockMarkedForClose;
+        ButtonPadSession.Instance.NetBlockHandler.MessageReceivedEvent -= OnBlockContentReceived;
+      }
     }
 
     void BlockMarkedForClose(IMyEntity ent)
@@ -121,20 +124,43 @@ namespace Lima
       Dispose();
     }
 
+    private MySprite GetMessageSprite(string message)
+    {
+      return new MySprite()
+      {
+        Type = SpriteType.TEXT,
+        Data = message,
+        RotationOrScale = 0.7f,
+        Color = _surface.ScriptForegroundColor,
+        Alignment = TextAlignment.CENTER,
+        Size = _surface.SurfaceSize
+      };
+    }
+
     public override void Run()
     {
       try
       {
-        if (!_init && ticks++ < (6 * 2)) // 2 secs
-          return;
+        var initMessage = !_init && ticks++ < (6 * 2);// 2 seconds
 
-        Init();
+        if (initMessage || !IsOwnerOrFactionShare())
+        {
+          base.Run();
+          using (var frame = m_surface.DrawFrame())
+          {
+            frame.Add(GetMessageSprite(initMessage ? "Use middle mouse to click." : "Button Pad\nThis Block is not shared with you!"));
+            frame.Dispose();
+          }
+          return;
+        }
+
+        if (!_init)
+          Init();
 
         if (_app == null)
           return;
 
         base.Run();
-
         using (var frame = m_surface.DrawFrame())
         {
           _app.ForceUpdate();
@@ -144,6 +170,7 @@ namespace Lima
       }
       catch (Exception e)
       {
+        _app?.Dispose();
         _app = null;
         MyLog.Default.WriteLineAndConsole($"{e.Message}\n{e.StackTrace}");
 

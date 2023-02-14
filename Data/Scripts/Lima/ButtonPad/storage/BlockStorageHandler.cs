@@ -48,6 +48,9 @@ namespace Lima
 
     [ProtoMember(2)]
     public List<MyTuple<int, string, long, string>> Buttons;
+
+    [ProtoMember(3)]
+    public float CustomScale;
   }
 
   public class BlockStorageHandler

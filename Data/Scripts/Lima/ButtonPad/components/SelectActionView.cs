@@ -74,6 +74,7 @@ namespace Lima
       button.Label.Alignment = smallWidth ? TextAlignment.CENTER : TextAlignment.LEFT;
       button.Label.FontSize = smallWidth ? 0.5f : 0.8f;
       button.Label.AutoBreakLine = true;
+      button.Label.MaxLines = 3;
       button.Pixels = new Vector2(0, h);
       button.Scale = new Vector2(1, 0);
       AddChild(button);
