@@ -2,6 +2,11 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <LCDTextures>
     <LCDTextureDefinition>
+      <Id Type="LCDTextureDefinition" Subtype="Lima/Blocks/Block" />
+      <SpritePath>Textures\GUI\Icons\Fake.dds</SpritePath>
+      <Selectable>false</Selectable>
+    </LCDTextureDefinition>
+    <LCDTextureDefinition>
       <Id Type="LCDTextureDefinition" Subtype="Lima/Blocks/Group" />
       <SpritePath>Textures\GUI\Icons\GroupIcon.dds</SpritePath>
       <Selectable>false</Selectable>

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System;
 using VRage.Game.ModAPI;
 using VRageMath;
+using VRage.Collections;
+using Sandbox.Definitions;
 
 namespace Lima
 {
@@ -12,6 +14,7 @@ namespace Lima
     public List<ActionButton> ActionButtons { get { return _buttonsView.ActionButtons; } }
     public Action SaveConfigAction;
 
+    public ListReader<MyLCDTextureDefinition> LcdTextureDefinitions;
     public float CustomScale = 1;
 
     private ButtonPadView _buttonsView;
@@ -24,6 +27,8 @@ namespace Lima
     public ButtonPadApp(Action saveConfigAction)
     {
       Direction = ViewDirection.Column;
+
+      LcdTextureDefinitions = MyDefinitionManager.Static.GetLCDTexturesDefinitions();
 
       _notification = MyAPIGateway.Utilities.CreateNotification(string.Empty);
       SaveConfigAction = saveConfigAction;
@@ -139,6 +144,7 @@ namespace Lima
       _loadadeAppContent = null;
       _notification = null;
       SaveConfigAction = null;
+      LcdTextureDefinitions = null;
       this.ForceDispose();
     }
 

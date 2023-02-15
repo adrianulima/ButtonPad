@@ -6,20 +6,27 @@ using System;
 using VRage.Game.ModAPI;
 using VRage.Game;
 using Sandbox.Game.Entities;
+using Sandbox.Definitions;
+using VRage.Collections;
 
 namespace Lima.ButtonPad
 {
   internal static class Utils
   {
-    internal static string GetBlockTexture(IMyCubeBlock block)
+    internal static string GetBlockTexture(IMyCubeBlock block, ListReader<MyLCDTextureDefinition> definitions)
     {
       var subType = block.BlockDefinition.SubtypeName;
       if (subType == "")
         subType = block.BlockDefinition.TypeIdString;
-      return $"Lima/Blocks/{subType}";
+
+      foreach (var item in definitions)
+        if (item.Id.SubtypeName == $"Lima/Blocks/{subType}")
+          return $"Lima/Blocks/{subType}";
+
+      return "Lima/Blocks/Block";
     }
 
-    internal static string GetBlockGroupTexture(IMyBlockGroup blockGroup)
+    internal static string GetBlockGroupTexture(IMyBlockGroup blockGroup, ListReader<MyLCDTextureDefinition> definitions)
     {
       List<IMyTerminalBlock> blocks = new List<IMyTerminalBlock>();
       blockGroup.GetBlocks(blocks);
@@ -29,7 +36,7 @@ namespace Lima.ButtonPad
         hashSet.Add(myTerminalBlock.GetType());
 
       if (hashSet.Count == 1)
-        return GetBlockTexture(blocks[0]);
+        return GetBlockTexture(blocks[0], definitions);
       else
         return "Lima/Blocks/Group";
     }

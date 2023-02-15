@@ -167,7 +167,7 @@ namespace Lima
       var darker7 = _padApp.Theme.GetMainColorDarker(7);
       Button.BorderColor = darker7;
 
-      UpdateAction(Utils.GetBlockGroupTexture(blockGroup));
+      UpdateAction(Utils.GetBlockGroupTexture(blockGroup, _padApp.LcdTextureDefinitions));
     }
 
     public void SetAction(IMyCubeBlock block, ITerminalAction terminalAction)
@@ -176,7 +176,7 @@ namespace Lima
       _terminalAction = terminalAction;
 
       UpdateBorderColor();
-      UpdateAction(Utils.GetBlockTexture(block));
+      UpdateAction(Utils.GetBlockTexture(block, _padApp.LcdTextureDefinitions));
     }
 
     private void UpdateBorderColor()
