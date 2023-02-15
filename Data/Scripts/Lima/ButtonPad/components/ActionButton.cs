@@ -7,6 +7,7 @@ using System.Text;
 using VRage.Game.ModAPI;
 using VRage;
 using VRageMath;
+using VRage.Game;
 
 namespace Lima
 {
@@ -129,7 +130,7 @@ namespace Lima
       else
       {
         var hasConnection = MyAPIGateway.GridGroups.HasConnection(_padApp.Screen.Block.CubeGrid as IMyCubeGrid, _block.CubeGrid, GridLinkTypeEnum.Logical);
-        if (hasConnection)
+        if (hasConnection && Utils.IsOwnerOrFactionShare(_block, MyAPIGateway.Session.Player))
           ApplyAction(_block);
         else
           MyAPIGateway.Utilities.ShowNotification("Activation Failed", 3000, "Red");
@@ -234,6 +235,7 @@ namespace Lima
       var defSize = text.Length > 12 ? 0.5f : 0.9f;
       _statusLabel.FontSize = MathHelper.Min(1.5f, (size.X * defSize) / 100);
       _statusLabel.Text = text;
+      _statusLabel.Enabled = _statusLabel.Text != "";
 
       _icon.SpriteSize = new Vector2(MathHelper.Min(sizeIcon.X, sizeIcon.Y));
       _icon.SpritePosition = (sizeIcon - _icon.SpriteSize) * 0.5f;

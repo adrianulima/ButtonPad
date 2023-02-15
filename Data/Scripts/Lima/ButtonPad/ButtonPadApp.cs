@@ -54,7 +54,6 @@ namespace Lima
       _loadadeAppContent = null;
 
       var anyPressed = MyAPIGateway.Input.IsAnyMouseOrJoystickPressed();
-
       if (MyAPIGateway.Gui.IsCursorVisible || (!_pressedInside && !Screen.IsOnScreen && anyPressed))
         SelectActionConfirm(false);
 
@@ -87,7 +86,8 @@ namespace Lima
       if (_loadadeAppContent == null)
         return;
 
-      CustomScale = _loadadeAppContent?.CustomScale ?? 1;
+      var customScale = _loadadeAppContent?.CustomScale ?? 0;
+      CustomScale = customScale > 0 ? customScale : 1;
       if (CustomScale != 1)
         _buttonsView.Reset();
       var count = _loadadeAppContent?.Buttons?.Count ?? 0;

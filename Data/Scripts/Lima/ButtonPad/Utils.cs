@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using VRage.Game.ModAPI;
+using VRage.Game;
+using Sandbox.Game.Entities;
 
 namespace Lima.ButtonPad
 {
@@ -40,7 +42,6 @@ namespace Lima.ButtonPad
       List<ITerminalAction> actionsList = new List<ITerminalAction>();
       blocks[0].GetActions(actionsList, (a) => a.IsEnabled(blocks[0]));
 
-      //(a) => a.IsEnabled(block)
       List<ITerminalAction> list2 = Enumerable.ToList<ITerminalAction>(actionsList);
 
       foreach (IMyTerminalBlock myTerminalBlock2 in Enumerable.Skip<IMyTerminalBlock>(blocks, 1))
@@ -67,6 +68,27 @@ namespace Lima.ButtonPad
         list2 = list3;
       }
       actions.AddRange(list2);
+    }
+
+    public static bool IsOwnerOrFactionShare(IMyCubeBlock block, IMyPlayer player)
+    {
+      var relation = (block.OwnerId > 0 ? player.GetRelationTo(block.OwnerId) : MyRelationsBetweenPlayerAndBlock.NoOwnership);
+      if (relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.NoOwnership)
+        return true;
+
+      var shareMode = Utils.GetBlockShareMode(block);
+      if (shareMode == MyOwnershipShareModeEnum.All || (relation == MyRelationsBetweenPlayerAndBlock.FactionShare && shareMode == MyOwnershipShareModeEnum.Faction))
+        return true;
+
+      return false;
+    }
+
+    public static MyOwnershipShareModeEnum GetBlockShareMode(IMyCubeBlock block)
+    {
+      var internalBlock = block as MyCubeBlock;
+      if (internalBlock != null && internalBlock.IDModule != null)
+        return internalBlock.IDModule.ShareMode;
+      return MyOwnershipShareModeEnum.None;
     }
   }
 }

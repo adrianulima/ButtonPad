@@ -9,6 +9,7 @@ using VRageMath;
 using System.Collections.Generic;
 using VRage;
 using VRage.Game.GUI.TextPanel;
+using Lima.ButtonPad;
 
 namespace Lima
 {
@@ -58,14 +59,6 @@ namespace Lima
 
       ButtonPadSession.Instance.NetBlockHandler.MessageReceivedEvent += OnBlockContentReceived;
       _terminalBlock.OnMarkForClose += BlockMarkedForClose;
-    }
-
-    private bool IsOwnerOrFactionShare()
-    {
-      var player = MyAPIGateway.Session.Player;
-      var relation = (_block.OwnerId > 0 ? player.GetRelationTo(_block.OwnerId) : MyRelationsBetweenPlayerAndBlock.NoOwnership);
-
-      return relation == MyRelationsBetweenPlayerAndBlock.Owner || relation == MyRelationsBetweenPlayerAndBlock.FactionShare;
     }
 
     private void SaveConfigAction()
@@ -143,7 +136,7 @@ namespace Lima
       {
         var initMessage = !_init && ticks++ < (6 * 2);// 2 seconds
 
-        if (initMessage || !IsOwnerOrFactionShare())
+        if (initMessage || !Utils.IsOwnerOrFactionShare(_block, MyAPIGateway.Session.Player))
         {
           base.Run();
           using (var frame = m_surface.DrawFrame())
