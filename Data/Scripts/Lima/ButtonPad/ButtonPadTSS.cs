@@ -33,8 +33,11 @@ namespace Lima
       _surface = surface;
       _terminalBlock = (IMyTerminalBlock)block;
 
-      surface.ScriptBackgroundColor = Color.Black;
-      Surface.ScriptForegroundColor = new Color(20, 30, 40);//Color.SteelBlue;
+      if (surface.ScriptBackgroundColor.Equals(new Color(0, 88, 151)) && surface.ScriptForegroundColor.Equals(new Color(179, 237, 255)))
+      {
+        surface.ScriptBackgroundColor = Color.Black;
+        Surface.ScriptForegroundColor = new Color(20, 30, 40);
+      }
     }
 
     public void Init()
