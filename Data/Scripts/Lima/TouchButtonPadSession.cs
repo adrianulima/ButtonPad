@@ -1,18 +1,27 @@
 using Lima.API;
+using Sandbox.Definitions;
 using Sandbox.ModAPI;
+using VRage.Collections;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 
 namespace Lima
 {
   [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
-  public class ButtonPadSession : MySessionComponentBase
+  public class TouchButtonPadSession : MySessionComponentBase
   {
     public TouchUiKit Api { get; private set; }
-    public static ButtonPadSession Instance;
+    public static TouchButtonPadSession Instance;
 
     public BlockStorageHandler BlockHandler;
     public NetworkHandler<BlockStorageContent> NetBlockHandler;
+
+    public ListReader<MyLCDTextureDefinition> LcdTextureDefinitions;
+
+    public override void BeforeStart()
+    {
+      LcdTextureDefinitions = MyDefinitionManager.Static.GetLCDTexturesDefinitions();
+    }
 
     public override void LoadData()
     {
@@ -49,6 +58,7 @@ namespace Lima
       NetBlockHandler?.Dispose();
 
       Api?.Unload();
+      LcdTextureDefinitions = null;
       Instance = null;
     }
   }

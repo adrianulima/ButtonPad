@@ -42,7 +42,7 @@ namespace Lima
 
     public void Init()
     {
-      if (!ButtonPadSession.Instance.Api.IsReady)
+      if (!TouchButtonPadSession.Instance.Api.IsReady)
         return;
 
       if (_init)
@@ -56,11 +56,11 @@ namespace Lima
         _app.Theme.Scale = _app.Cursor.Scale = 0.75f;
       _app.CreateElements();
 
-      var appContent = ButtonPadSession.Instance.BlockHandler.LoadAppContent(_block, _surface.Name);
+      var appContent = TouchButtonPadSession.Instance.BlockHandler.LoadAppContent(_block, _surface.Name);
       if (appContent != null)
         _app.ApplySettings(appContent.GetValueOrDefault());
 
-      ButtonPadSession.Instance.NetBlockHandler.MessageReceivedEvent += OnBlockContentReceived;
+      TouchButtonPadSession.Instance.NetBlockHandler.MessageReceivedEvent += OnBlockContentReceived;
       _terminalBlock.OnMarkForClose += BlockMarkedForClose;
     }
 
@@ -85,11 +85,11 @@ namespace Lima
         Buttons = buttons
       };
 
-      var blockContent = ButtonPadSession.Instance.BlockHandler.SaveAppContent(_block, appContent);
+      var blockContent = TouchButtonPadSession.Instance.BlockHandler.SaveAppContent(_block, appContent);
       if (MyAPIGateway.Multiplayer.MultiplayerActive && blockContent != null)
       {
         blockContent.NetworkId = MyAPIGateway.Session.Player.SteamUserId;
-        ButtonPadSession.Instance.NetBlockHandler.Broadcast(blockContent);
+        TouchButtonPadSession.Instance.NetBlockHandler.Broadcast(blockContent);
       }
     }
 
@@ -111,7 +111,7 @@ namespace Lima
       {
         _app?.Dispose();
         _terminalBlock.OnMarkForClose -= BlockMarkedForClose;
-        ButtonPadSession.Instance.NetBlockHandler.MessageReceivedEvent -= OnBlockContentReceived;
+        TouchButtonPadSession.Instance.NetBlockHandler.MessageReceivedEvent -= OnBlockContentReceived;
       }
     }
 

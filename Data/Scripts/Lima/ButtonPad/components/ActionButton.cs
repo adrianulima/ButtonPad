@@ -7,7 +7,6 @@ using System.Text;
 using VRage.Game.ModAPI;
 using VRage;
 using VRageMath;
-using VRage.Game;
 
 namespace Lima
 {
@@ -167,7 +166,7 @@ namespace Lima
       var darker7 = _padApp.Theme.GetMainColorDarker(7);
       Button.BorderColor = darker7;
 
-      UpdateAction(Utils.GetBlockGroupTexture(blockGroup, _padApp.LcdTextureDefinitions));
+      UpdateAction(Utils.GetBlockGroupTexture(blockGroup, TouchButtonPadSession.Instance.LcdTextureDefinitions));
     }
 
     public void SetAction(IMyCubeBlock block, ITerminalAction terminalAction)
@@ -176,7 +175,7 @@ namespace Lima
       _terminalAction = terminalAction;
 
       UpdateBorderColor();
-      UpdateAction(Utils.GetBlockTexture(block, _padApp.LcdTextureDefinitions));
+      UpdateAction(Utils.GetBlockTexture(block, TouchButtonPadSession.Instance.LcdTextureDefinitions));
     }
 
     private void UpdateBorderColor()
