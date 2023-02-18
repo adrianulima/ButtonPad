@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
 using ProtoBuf;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
-using VRage;
+using System.Collections.Generic;
+using System;
 using VRage.Game.ModAPI;
 using VRage.Utils;
+using VRage;
 
 namespace Lima
 {
@@ -51,6 +51,9 @@ namespace Lima
 
     [ProtoMember(3)]
     public float CustomScale;
+
+    [ProtoMember(4)]
+    public float? ThemeScale;
   }
 
   public class BlockStorageHandler

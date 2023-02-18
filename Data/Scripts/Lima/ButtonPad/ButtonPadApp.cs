@@ -17,6 +17,7 @@ namespace Lima
     private ButtonPadView _buttonsView;
     private SelectActionView _actionsView;
     private SelectBlockView _blocksView;
+    private ParameterView _paramView;
     private AppContent? _loadadeAppContent;
 
     private IMyHudNotification _notification;
@@ -43,6 +44,10 @@ namespace Lima
       _blocksView.Enabled = false;
       AddChild(_blocksView);
 
+      _paramView = new ParameterView(this);
+      _paramView.Enabled = false;
+      AddChild(_paramView);
+
       RegisterUpdate(Update);
     }
 
@@ -52,6 +57,11 @@ namespace Lima
     {
       ApplyLoadedContent();
       _loadadeAppContent = null;
+
+      if (_blocksView.Enabled)
+        _blocksView.UpdateScrollStep();
+      if (_actionsView.Enabled)
+        _actionsView.UpdateScrollStep();
 
       var anyPressed = MyAPIGateway.Input.IsAnyMouseOrJoystickPressed();
       if (MyAPIGateway.Gui.IsCursorVisible || (!_pressedInside && !Screen.IsOnScreen && anyPressed))
@@ -86,10 +96,14 @@ namespace Lima
       if (_loadadeAppContent == null)
         return;
 
+      var themeScale = _loadadeAppContent?.ThemeScale ?? 0;
+      Theme.Scale = themeScale > 0 ? themeScale : 1;
+
       var customScale = _loadadeAppContent?.CustomScale ?? 0;
       CustomScale = customScale > 0 ? customScale : 1;
       if (CustomScale != 1)
         _buttonsView.Reset();
+
       var count = _loadadeAppContent?.Buttons?.Count ?? 0;
       var terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Screen.Block.CubeGrid as IMyCubeGrid);
       if (terminalSystem == null)
@@ -133,8 +147,10 @@ namespace Lima
       _buttonsView.Dispose();
       _blocksView.Dispose();
       _actionsView.Dispose();
+      _paramView.Dispose();
       _buttonsView = null;
       _blocksView = null;
+      _paramView = null;
       _actionsView = null;
       _loadadeAppContent = null;
       _notification = null;
@@ -146,6 +162,7 @@ namespace Lima
     {
       _buttonsView.Enabled = false;
       _actionsView.Enabled = false;
+      _paramView.Enabled = false;
       _blocksView.Enabled = true;
 
       _blocksView.UpdateItemsForButton(actionBt, Screen.Block.CubeGrid as IMyCubeGrid);
@@ -155,6 +172,7 @@ namespace Lima
     {
       _buttonsView.Enabled = false;
       _actionsView.Enabled = true;
+      _paramView.Enabled = false;
       _blocksView.Enabled = false;
 
       _actionsView.UpdateItemsForButton(actionBt, block);
@@ -164,15 +182,27 @@ namespace Lima
     {
       _buttonsView.Enabled = false;
       _actionsView.Enabled = true;
+      _paramView.Enabled = false;
       _blocksView.Enabled = false;
 
       _actionsView.UpdateItemsForButton(actionBt, blockGroup);
+    }
+
+    public void ShowSelectArgumentView(ActionButton actionBt)
+    {
+      _buttonsView.Enabled = false;
+      _actionsView.Enabled = false;
+      _blocksView.Enabled = false;
+      _paramView.Enabled = true;
+
+      _paramView.UpdateForButton(actionBt);
     }
 
     public void SelectActionConfirm(bool save = true)
     {
       _buttonsView.Enabled = true;
       _actionsView.Enabled = false;
+      _paramView.Enabled = false;
       _blocksView.Enabled = false;
 
       if (save)

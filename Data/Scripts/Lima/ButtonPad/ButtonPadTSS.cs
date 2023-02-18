@@ -1,15 +1,15 @@
+using Lima.ButtonPad;
 using Sandbox.Game.GameSystems.TextSurfaceScripts;
 using Sandbox.ModAPI;
+using System.Collections.Generic;
 using System;
+using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI;
 using VRage.Game;
 using VRage.ModAPI;
 using VRage.Utils;
-using VRageMath;
-using System.Collections.Generic;
 using VRage;
-using VRage.Game.GUI.TextPanel;
-using Lima.ButtonPad;
+using VRageMath;
 
 namespace Lima
 {
@@ -82,7 +82,8 @@ namespace Lima
       {
         SurfaceName = _surface.Name,
         CustomScale = _app.CustomScale,
-        Buttons = buttons
+        Buttons = buttons,
+        ThemeScale = _app.Theme.Scale
       };
 
       var blockContent = TouchButtonPadSession.Instance.BlockHandler.SaveAppContent(_block, appContent);
@@ -133,6 +134,26 @@ namespace Lima
       };
     }
 
+    private void UpdateScale()
+    {
+      var ctrl = MyAPIGateway.Input.IsAnyCtrlKeyPressed();
+      if (!ctrl || !_app.Screen.IsOnScreen || MyAPIGateway.Gui.IsCursorVisible)
+        return;
+
+      var plus = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Add) || MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.OemPlus);
+      var minus = false;
+      if (!plus)
+        minus = MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.Subtract) || MyAPIGateway.Input.IsKeyPress(VRage.Input.MyKeys.OemMinus);
+
+      if (plus || minus)
+      {
+        var sign = plus ? 1 : -1;
+        var minScale = Math.Min(Math.Max(Math.Min(this.Surface.SurfaceSize.X, this.Surface.SurfaceSize.Y) / 512, 0.4f), 1.5f);
+        _app.Theme.Scale = MathHelper.Min(1.5f, MathHelper.Max(minScale, _app.Theme.Scale + sign * 0.1f));
+        SaveConfigAction();
+      }
+    }
+
     public override void Run()
     {
       try
@@ -155,6 +176,8 @@ namespace Lima
 
         if (_app == null)
           return;
+
+        UpdateScale();
 
         base.Run();
         using (var frame = m_surface.DrawFrame())

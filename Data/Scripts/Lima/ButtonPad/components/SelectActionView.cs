@@ -15,6 +15,8 @@ namespace Lima
     private List<ITerminalAction> _terminalActions = new List<ITerminalAction>();
     private List<TouchButton> _buttons = new List<TouchButton>();
 
+    private float _step = 0;
+
     public SelectActionView(ButtonPadApp pad)
     {
       _padApp = pad;
@@ -73,6 +75,8 @@ namespace Lima
       button.Padding = new Vector4(4);
       button.Label.Alignment = smallWidth ? TextAlignment.CENTER : TextAlignment.LEFT;
       button.Label.FontSize = smallWidth ? 0.5f : 0.8f;
+      if (button.Label.Text.Length > 20)
+        button.Label.FontSize = smallWidth ? 0.4f : 0.6f;
       button.Label.AutoBreakLine = true;
       button.Label.MaxLines = 3;
       button.Pixels = new Vector2(0, h);
@@ -80,7 +84,13 @@ namespace Lima
       AddChild(button);
       _buttons.Add(button);
 
-      ScrollWheelStep = (button.Pixels.Y + Gap) * _padApp.Theme.Scale;
+      _step = (button.Pixels.Y + Gap);
+      UpdateScrollStep();
+    }
+
+    public void UpdateScrollStep()
+    {
+      ScrollWheelStep = _step * _padApp.Theme.Scale;
     }
 
     public void RemoveAllChildren()
@@ -101,7 +111,11 @@ namespace Lima
     private void SelectAction(IMyCubeBlock block, ActionButton actionBt, ITerminalAction action)
     {
       actionBt.SetAction(block, action);
-      _padApp.SelectActionConfirm();
+
+      if (block is IMyProgrammableBlock && action.Id == "Run")
+        _padApp.ShowSelectArgumentView(actionBt);
+      else
+        _padApp.SelectActionConfirm();
     }
   }
 }

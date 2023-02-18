@@ -17,6 +17,8 @@ namespace Lima
     private List<TouchView> _views = new List<TouchView>();
     private List<IMyBlockGroup> _blockGroups = new List<IMyBlockGroup>();
 
+    private float _step = 0;
+
     public SelectBlockView(ButtonPadApp pad)
     {
       _padApp = pad;
@@ -105,7 +107,7 @@ namespace Lima
         button.Label.FontSize = 0.6f;
         ScrollBar.Pixels = new Vector2(24, 0);
       }
-      if (button.Label.Text.Length > 25)
+      if (button.Label.Text.Length > 20)
         button.Label.FontSize = 0.45f;
 
       _buttons.Add(button);
@@ -135,9 +137,15 @@ namespace Lima
         lastView = view;
       }
 
-      ScrollWheelStep = (lastView.Pixels.Y + Gap) * _padApp.Theme.Scale;
+      _step = (lastView.Pixels.Y + Gap);
+      UpdateScrollStep();
 
       return lastView;
+    }
+
+    public void UpdateScrollStep()
+    {
+      ScrollWheelStep = _step * _padApp.Theme.Scale;
     }
 
     public void RemoveAllChildren()

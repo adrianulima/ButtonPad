@@ -4,9 +4,11 @@ using Sandbox.ModAPI.Interfaces;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Text;
+using VRage.Collections;
 using VRage.Game.ModAPI;
 using VRage;
 using VRageMath;
+using TerminalActionParameter = Sandbox.ModAPI.Ingame.TerminalActionParameter;
 
 namespace Lima
 {
@@ -16,10 +18,11 @@ namespace Lima
     private TouchLabel _statusLabel;
     private Icon _icon;
 
+    private ButtonPadApp _padApp;
     private ITerminalAction _terminalAction;
     private IMyCubeBlock _block;
     private IMyBlockGroup _blockGroup;
-    private ButtonPadApp _padApp;
+
     private string _iconString = "";
     private string _statusText = "";
     private StringBuilder _name = new StringBuilder("");
@@ -27,6 +30,19 @@ namespace Lima
 
     private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
     public int Index = -1;
+
+    private ListReader<TerminalActionParameter> _paramList;
+    private string _param = "";
+    public string Param
+    {
+      get { return _param; }
+      set
+      {
+        _param = value;
+        var list = new List<TerminalActionParameter>() { TerminalActionParameter.Get(_param) };
+        _paramList = new ListReader<TerminalActionParameter>(list);
+      }
+    }
 
     public ActionButton(ButtonPadApp pad, int index)
     {
@@ -142,7 +158,12 @@ namespace Lima
     private void ApplyAction(IMyCubeBlock block)
     {
       if (block.IsFunctional)
-        _terminalAction.Apply(block);
+      {
+        if (Param == "")
+          _terminalAction.Apply(block);
+        else
+          _terminalAction.Apply(block, _paramList);
+      }
     }
 
     public void CloneFrom(ActionButton actBt)
@@ -157,6 +178,7 @@ namespace Lima
     {
       _blockGroup = blockGroup;
       _terminalAction = terminalAction;
+      Param = "";
 
       _blocks.Clear();
       blockGroup.GetBlocks(_blocks);
@@ -173,6 +195,7 @@ namespace Lima
     {
       _block = block;
       _terminalAction = terminalAction;
+      Param = "";
 
       UpdateBorderColor();
       UpdateAction(Utils.GetBlockTexture(block, TouchButtonPadSession.Instance.LcdTextureDefinitions));
@@ -195,8 +218,14 @@ namespace Lima
 
     private void UpdateValue()
     {
-      if (_terminalAction == null || _icon.SpriteImage == "Cross")
+      if (_terminalAction == null)
         return;
+
+      if (_icon.SpriteImage == "Cross")
+      {
+        SetBtText("Clear");
+        return;
+      }
 
       _icon.SpriteColor = Button.Disabled ? _padApp.Theme.GetMainColorDarker(4) : _gray;
       _statusLabel.TextColor = Button.Disabled ? _padApp.Theme.GetMainColorDarker(2) : _padApp.Theme.WhiteColor;
@@ -206,6 +235,8 @@ namespace Lima
       {
         _terminalAction.WriteValue(_block, _name);
         _statusText = _name.ToString();
+        if (_statusText == "")
+          _statusText = _terminalAction.Name.ToString();
         SetBtText(_statusText);
       }
     }
@@ -231,10 +262,9 @@ namespace Lima
       _prevSize = sizeIcon;
 
       var size = Button.GetSize();
-      var defSize = text.Length > 12 ? 0.5f : 0.9f;
-      _statusLabel.FontSize = MathHelper.Min(1.5f, (size.X * defSize) / 100);
+      var defSize = size.X >= 100 ? 0.7f : 0.5f;
+      _statusLabel.FontSize = MathHelper.Max(defSize, MathHelper.Min(1.5f, (size.X * defSize) / 100));
       _statusLabel.Text = text;
-      _statusLabel.Enabled = _statusLabel.Text != "";
 
       _icon.SpriteSize = new Vector2(MathHelper.Min(sizeIcon.X, sizeIcon.Y));
       _icon.SpritePosition = (sizeIcon - _icon.SpriteSize) * 0.5f;
