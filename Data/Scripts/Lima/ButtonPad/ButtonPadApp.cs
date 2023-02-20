@@ -98,6 +98,7 @@ namespace Lima
 
       var themeScale = _loadadeAppContent?.ThemeScale ?? 0;
       Theme.Scale = themeScale > 0 ? themeScale : 1;
+      Cursor.Scale = Theme.Scale;
 
       var customScale = _loadadeAppContent?.CustomScale ?? 0;
       CustomScale = customScale > 0 ? customScale : 1;
