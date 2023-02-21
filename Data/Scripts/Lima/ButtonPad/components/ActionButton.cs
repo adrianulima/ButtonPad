@@ -43,6 +43,7 @@ namespace Lima
         _param = value;
         var list = new List<TerminalActionParameter>() { TerminalActionParameter.Get(_param) };
         _paramList = new ListReader<TerminalActionParameter>(list);
+        _dirty = true;
       }
     }
 
@@ -57,6 +58,7 @@ namespace Lima
       Button.Anchor = ViewAnchor.SpaceAround;
       Button.Pixels = Vector2.Zero;
       Button.Scale = Vector2.One;
+      Button.Gap = 4;
 
       _icon = new Icon("", new Vector2(40), 0, _gray);
       _icon.Absolute = false;
@@ -67,6 +69,7 @@ namespace Lima
       _extraLabel = new TouchLabel("");
       _extraLabel.FontSize = 0.8f;
       _extraLabel.Enabled = false;
+      _extraLabel.Absolute = true;
       Button.AddChild(_extraLabel);
 
       _statusLabel = new TouchLabel("");
@@ -220,6 +223,7 @@ namespace Lima
       _blockGroup = blockGroup;
       _terminalAction = terminalAction;
       Param = "";
+      TextMode = 0;
 
       _blocks.Clear();
       blockGroup.GetBlocks(_blocks);
@@ -295,13 +299,19 @@ namespace Lima
     Vector2 _prevSize = Vector2.Zero;
     int _prevMode = 0;
     Color _prevColor = Color.Transparent;
+    string _text = "";
+    bool _dirty = false;
     private void SetBtText(string text)
     {
       var scale = (_padApp.Theme?.Scale ?? 1);
       var sizeIcon = _icon.GetSize() / scale;
-      if (_statusLabel.Text == text && _prevSize == sizeIcon && _prevMode == TextMode && _prevColor == _padApp.Screen.Surface.ScriptForegroundColor)
+      if (!_dirty && _text == text && _prevSize == sizeIcon && _prevMode == TextMode && _prevColor == _padApp.Screen.Surface.ScriptForegroundColor)
         return;
 
+      UpdateBorderColor();
+
+      _dirty = false;
+      _text = text;
       _prevSize = sizeIcon;
       _prevMode = TextMode;
       _prevColor = _padApp.Screen.Surface.ScriptForegroundColor;
@@ -318,8 +328,14 @@ namespace Lima
       {
         _statusLabel.Text = (text == "Run" && _param != "") ? $"{text} \"{_param}\"" : text;
         _extraLabel.Enabled = true;
-        _extraLabel.TextColor = _padApp.Theme.MainColor;
-        _extraLabel.FontSize = _statusLabel.FontSize * 0.75f;
+        var p = new Vector2(Button.Position.X, _statusLabel.Position.Y - _extraLabel.GetSize().Y * 0.7f);
+        if (p != _extraLabel.Position)
+        {
+          _extraLabel.Position = p;
+          _dirty = true;
+        }
+        _extraLabel.TextColor = GetBrighterColor(_padApp.Theme.MainColor);
+        _extraLabel.FontSize = _statusLabel.FontSize * 0.7f;
         _extraLabel.Text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
       }
       else
@@ -329,6 +345,14 @@ namespace Lima
 
       _icon.SpriteSize = new Vector2(MathHelper.Min(sizeIcon.X, sizeIcon.Y));
       _icon.SpritePosition = (sizeIcon - _icon.SpriteSize) * 0.5f;
+    }
+
+    public Color GetBrighterColor(Color color)
+    {
+      float r = color.R + ((255 - color.R) * 0.2f);
+      float g = color.G + ((255 - color.G) * 0.2f);
+      float b = color.B + ((255 - color.B) * 0.2f);
+      return new Color(r / 255, g / 255, b / 255);
     }
 
     public void Dispose()
