@@ -14,16 +14,6 @@ namespace Lima
     public BlockStorageHandler BlockHandler;
     public NetworkHandler<BlockStorageContent> NetBlockHandler;
 
-    public LCDTextureHandler TextureHandler;
-
-    public override void BeforeStart()
-    {
-      if (MyAPIGateway.Utilities.IsDedicated)
-        return;
-
-      TextureHandler = new LCDTextureHandler();
-    }
-
     public override void LoadData()
     {
       // For server and clients
@@ -58,9 +48,7 @@ namespace Lima
         NetBlockHandler.MessageReceivedEvent -= NetwrokBlockReceivedServer;
 
       NetBlockHandler?.Dispose();
-      TextureHandler?.Dispose();
       Api?.Unload();
-      TextureHandler = null;
       Instance = null;
     }
   }

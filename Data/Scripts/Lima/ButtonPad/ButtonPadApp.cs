@@ -145,7 +145,6 @@ namespace Lima
 
         if (len > 1)
           _buttonsView.ActionButtons[index].TextMode = int.Parse(splitActionAndParam[1]);
-
       }
     }
 

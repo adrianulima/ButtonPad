@@ -63,7 +63,7 @@ namespace Lima
         var bt = new TouchButton($"*{blgr.Name}*", () => SelectBlockGroup(blgr, actionBt));
         bt.BorderColor = darker7;
         bt.Border = border;
-        lastView = AddButton(bt, TouchButtonPadSession.Instance.TextureHandler.GetBlockGroupTexture(blgr), odd, lastView, gray);
+        lastView = AddButton(bt, TouchButtonPadSession.Instance.Api.GetBlockGroupIconSprite(blgr), odd, lastView, gray);
         odd++;
       }
 
@@ -73,7 +73,7 @@ namespace Lima
         var bt = new TouchButton(bl.DisplayNameText.ToString(), () => SelectBlock(bl, actionBt));
         bt.BorderColor = same ? darker7 : golden;
         bt.Border = border;
-        lastView = AddButton(bt, TouchButtonPadSession.Instance.TextureHandler.GetBlockTexture(bl), odd, lastView, gray);
+        lastView = AddButton(bt, TouchButtonPadSession.Instance.Api.GetBlockIconSprite(bl), odd, lastView, gray);
         odd++;
       }
     }

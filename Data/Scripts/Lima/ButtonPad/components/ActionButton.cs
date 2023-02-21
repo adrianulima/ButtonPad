@@ -229,7 +229,7 @@ namespace Lima
       var darker7 = _padApp.Theme.GetMainColorDarker(7);
       Button.BorderColor = darker7;
 
-      UpdateAction(TouchButtonPadSession.Instance.TextureHandler.GetBlockGroupTexture(blockGroup));
+      UpdateAction(TouchButtonPadSession.Instance.Api.GetBlockGroupIconSprite(blockGroup));
     }
 
     public void SetAction(IMyCubeBlock block, ITerminalAction terminalAction)
@@ -239,7 +239,7 @@ namespace Lima
       Param = "";
 
       UpdateBorderColor();
-      UpdateAction(TouchButtonPadSession.Instance.TextureHandler.GetBlockTexture(block));
+      UpdateAction(TouchButtonPadSession.Instance.Api.GetBlockIconSprite(block));
     }
 
     private void UpdateBorderColor()
