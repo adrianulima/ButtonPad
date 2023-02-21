@@ -15,6 +15,7 @@ namespace Lima
   public class ActionButton
   {
     public TouchEmptyButton Button;
+    private TouchLabel _extraLabel;
     private TouchLabel _statusLabel;
     private Icon _icon;
 
@@ -30,6 +31,7 @@ namespace Lima
 
     private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
     public int Index = -1;
+    public int TextMode = 0;
 
     private ListReader<TerminalActionParameter> _paramList;
     private string _param = "";
@@ -41,7 +43,6 @@ namespace Lima
         _param = value;
         var list = new List<TerminalActionParameter>() { TerminalActionParameter.Get(_param) };
         _paramList = new ListReader<TerminalActionParameter>(list);
-        // SetBtText(_statusText);
       }
     }
 
@@ -63,6 +64,11 @@ namespace Lima
       _icon.Scale = Vector2.One;
       Button.AddChild(_icon);
 
+      _extraLabel = new TouchLabel("");
+      _extraLabel.FontSize = 0.8f;
+      _extraLabel.Enabled = false;
+      Button.AddChild(_extraLabel);
+
       _statusLabel = new TouchLabel("");
       _statusLabel.FontSize = 0.8f;
       Button.AddChild(_statusLabel);
@@ -73,6 +79,7 @@ namespace Lima
     private void Update()
     {
       var ctrl = _padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed() && !MyAPIGateway.Input.IsAnyShiftKeyPressed();
+      var shift = _padApp.Screen.IsOnScreen && !MyAPIGateway.Input.IsAnyCtrlKeyPressed() && MyAPIGateway.Input.IsAnyShiftKeyPressed();
 
       if ((!ctrl || !Button.Handler.IsMouseOver) && _icon.SpriteImage != _iconString)
       {
@@ -93,7 +100,7 @@ namespace Lima
       if (ctrl)
         Button.Disabled = false;
 
-      if (Button.Handler.IsMousePressed)
+      if (Button.Handler.IsMousePressed && !ctrl && !shift)
         Button.BgColor = _padApp.Theme.GetMainColorDarker(8);
       else if (Button.Handler.IsMouseOver)
       {
@@ -109,6 +116,19 @@ namespace Lima
             SetBtText("Clear");
             _statusLabel.TextColor = _padApp.Theme.WhiteColor;
           }
+          _padApp.ShowNotification($"Clear button");
+        }
+        else if (_terminalAction != null && shift)
+        {
+          _statusLabel.TextColor = new Color(140, 140, 0);
+          var changeTo = "\"Action Value\"";
+          if (TextMode == 0)
+            changeTo = "\"Block Name\"";
+          else if (TextMode == 1)
+            changeTo = "\"Both Names\"";
+          else if (TextMode == 2)
+            changeTo = "\"No Text\"";
+          _padApp.ShowNotification($"Switch to {changeTo}");
         }
         else if (_terminalAction != null & _block != null)
         {
@@ -133,9 +153,17 @@ namespace Lima
         _padApp.ShowSelectBlockView(this);
         return;
       }
-      else if (_padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed())
+      else if (_padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed() && !MyAPIGateway.Input.IsAnyShiftKeyPressed())
       {
         ClearAction();
+        _padApp.SelectActionConfirm();
+        return;
+      }
+      else if (_padApp.Screen.IsOnScreen && !MyAPIGateway.Input.IsAnyCtrlKeyPressed() && MyAPIGateway.Input.IsAnyShiftKeyPressed())
+      {
+        TextMode++;
+        if (TextMode > 3)
+          TextMode = 0;
         _padApp.SelectActionConfirm();
         return;
       }
@@ -174,12 +202,16 @@ namespace Lima
     public void CloneFrom(ActionButton actBt)
     {
       if (actBt?._blockGroup != null)
+      {
         SetAction(actBt._blockGroup, actBt._terminalAction);
+        TextMode = actBt?.TextMode ?? 0;
+      }
       else if (actBt?._block != null)
       {
         SetAction(actBt._block, actBt._terminalAction);
         if (actBt.Param != "")
           Param = actBt.Param;
+        TextMode = actBt?.TextMode ?? 0;
       }
     }
 
@@ -261,19 +293,39 @@ namespace Lima
     }
 
     Vector2 _prevSize = Vector2.Zero;
+    int _prevMode = 0;
+    Color _prevColor = Color.Transparent;
     private void SetBtText(string text)
     {
       var scale = (_padApp.Theme?.Scale ?? 1);
       var sizeIcon = _icon.GetSize() / scale;
-      if (_statusLabel.Text == text && _prevSize == sizeIcon)
+      if (_statusLabel.Text == text && _prevSize == sizeIcon && _prevMode == TextMode && _prevColor == _padApp.Screen.Surface.ScriptForegroundColor)
         return;
 
       _prevSize = sizeIcon;
+      _prevMode = TextMode;
+      _prevColor = _padApp.Screen.Surface.ScriptForegroundColor;
 
+      _extraLabel.Enabled = false;
       var size = Button.GetSize();
       var defSize = size.X >= 100 ? 0.7f : 0.5f;
-      _statusLabel.FontSize = MathHelper.Max(defSize, MathHelper.Min(1.5f, (size.X * defSize) / 100));
-      _statusLabel.Text = (text == "Run" && _param != "") ? $"{text} \"{_param}\"" : text;
+      _statusLabel.FontSize = MathHelper.Max(defSize, MathHelper.Min(1, (size.X * defSize) / 100));
+      if (TextMode == 0 || text == "Clear")
+        _statusLabel.Text = (text == "Run" && _param != "") ? $"{text} \"{_param}\"" : text;
+      else if (TextMode == 1)
+        _statusLabel.Text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
+      else if (TextMode == 2)
+      {
+        _statusLabel.Text = (text == "Run" && _param != "") ? $"{text} \"{_param}\"" : text;
+        _extraLabel.Enabled = true;
+        _extraLabel.TextColor = _padApp.Theme.MainColor;
+        _extraLabel.FontSize = _statusLabel.FontSize * 0.75f;
+        _extraLabel.Text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
+      }
+      else
+        _statusLabel.Text = "";
+
+      _statusLabel.Enabled = _statusLabel.Text != "";
 
       _icon.SpriteSize = new Vector2(MathHelper.Min(sizeIcon.X, sizeIcon.Y));
       _icon.SpritePosition = (sizeIcon - _icon.SpriteSize) * 0.5f;
@@ -293,8 +345,7 @@ namespace Lima
 
     public MyTuple<int, string, long, string> GetTuple()
     {
-      var terminalId = _terminalAction?.Id ?? "";
-      var terminalActionAndParam = Param == "" ? terminalId : $"{terminalId}|{Param}";
+      var terminalActionAndParam = $"{_terminalAction?.Id ?? ""}|{TextMode}|{Param}";
       return new MyTuple<int, string, long, string>(Index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, terminalActionAndParam);
     }
   }

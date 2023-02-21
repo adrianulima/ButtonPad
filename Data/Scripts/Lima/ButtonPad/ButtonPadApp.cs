@@ -132,14 +132,20 @@ namespace Lima
 
         var terminalAction = actionName != "" ? MyAPIGateway.TerminalActionsHelper.GetActionWithName(actionName, block.GetType()) : null;
         var blGrp = blGrpName != "" ? terminalSystem.GetBlockGroupWithName(blGrpName) : null;
+
+        var len = splitActionAndParam.Length;
         if (blGrp != null)
           _buttonsView.ActionButtons[index].SetAction(blGrp, terminalAction);
         else
         {
           _buttonsView.ActionButtons[index].SetAction(block, terminalAction);
-          if (splitActionAndParam.Length > 1)
-            _buttonsView.ActionButtons[index].Param = splitActionAndParam[1];
+          if (len > 2)
+            _buttonsView.ActionButtons[index].Param = splitActionAndParam[2];
         }
+
+        if (len > 1)
+          _buttonsView.ActionButtons[index].TextMode = int.Parse(splitActionAndParam[1]);
+
       }
     }
 
