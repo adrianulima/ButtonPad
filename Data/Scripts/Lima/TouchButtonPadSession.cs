@@ -1,7 +1,5 @@
 using Lima.API;
-using Sandbox.Definitions;
 using Sandbox.ModAPI;
-using VRage.Collections;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 
@@ -16,11 +14,14 @@ namespace Lima
     public BlockStorageHandler BlockHandler;
     public NetworkHandler<BlockStorageContent> NetBlockHandler;
 
-    public ListReader<MyLCDTextureDefinition> LcdTextureDefinitions;
+    public LCDTextureHandler TextureHandler;
 
     public override void BeforeStart()
     {
-      LcdTextureDefinitions = MyDefinitionManager.Static.GetLCDTexturesDefinitions();
+      if (MyAPIGateway.Utilities.IsDedicated)
+        return;
+
+      TextureHandler = new LCDTextureHandler();
     }
 
     public override void LoadData()
@@ -55,10 +56,11 @@ namespace Lima
     {
       if (NetBlockHandler != null)
         NetBlockHandler.MessageReceivedEvent -= NetwrokBlockReceivedServer;
-      NetBlockHandler?.Dispose();
 
+      NetBlockHandler?.Dispose();
+      TextureHandler?.Dispose();
       Api?.Unload();
-      LcdTextureDefinitions = null;
+      TextureHandler = null;
       Instance = null;
     }
   }

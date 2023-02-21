@@ -41,6 +41,7 @@ namespace Lima
         _param = value;
         var list = new List<TerminalActionParameter>() { TerminalActionParameter.Get(_param) };
         _paramList = new ListReader<TerminalActionParameter>(list);
+        // SetBtText(_statusText);
       }
     }
 
@@ -112,13 +113,17 @@ namespace Lima
         else if (_terminalAction != null & _block != null)
         {
           var text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
-          _padApp.ShowNotification($"{text} - {_terminalAction.Name.ToString()}");
+          _padApp.ShowNotification($"{text} - {_terminalAction.Name.ToString()}{GetParamString()}");
         }
         Button.BgColor = disabled ? _padApp.Theme.GetMainColorDarker(3) : hoverColor;
       }
       else
         Button.BgColor = disabled ? _padApp.Theme.GetMainColorDarker(3) : _padApp.Theme.GetMainColorDarker(4);
+    }
 
+    private string GetParamString()
+    {
+      return Param != "" ? $" \"{Param}\"" : "";
     }
 
     private void OnClickButton()
@@ -171,7 +176,11 @@ namespace Lima
       if (actBt?._blockGroup != null)
         SetAction(actBt._blockGroup, actBt._terminalAction);
       else if (actBt?._block != null)
+      {
         SetAction(actBt._block, actBt._terminalAction);
+        if (actBt.Param != "")
+          Param = actBt.Param;
+      }
     }
 
     public void SetAction(IMyBlockGroup blockGroup, ITerminalAction terminalAction)
@@ -188,7 +197,7 @@ namespace Lima
       var darker7 = _padApp.Theme.GetMainColorDarker(7);
       Button.BorderColor = darker7;
 
-      UpdateAction(Utils.GetBlockGroupTexture(blockGroup, TouchButtonPadSession.Instance.LcdTextureDefinitions));
+      UpdateAction(TouchButtonPadSession.Instance.TextureHandler.GetBlockGroupTexture(blockGroup));
     }
 
     public void SetAction(IMyCubeBlock block, ITerminalAction terminalAction)
@@ -198,7 +207,7 @@ namespace Lima
       Param = "";
 
       UpdateBorderColor();
-      UpdateAction(Utils.GetBlockTexture(block, TouchButtonPadSession.Instance.LcdTextureDefinitions));
+      UpdateAction(TouchButtonPadSession.Instance.TextureHandler.GetBlockTexture(block));
     }
 
     private void UpdateBorderColor()
@@ -264,7 +273,7 @@ namespace Lima
       var size = Button.GetSize();
       var defSize = size.X >= 100 ? 0.7f : 0.5f;
       _statusLabel.FontSize = MathHelper.Max(defSize, MathHelper.Min(1.5f, (size.X * defSize) / 100));
-      _statusLabel.Text = text;
+      _statusLabel.Text = (text == "Run" && _param != "") ? $"{text} \"{_param}\"" : text;
 
       _icon.SpriteSize = new Vector2(MathHelper.Min(sizeIcon.X, sizeIcon.Y));
       _icon.SpritePosition = (sizeIcon - _icon.SpriteSize) * 0.5f;
@@ -284,7 +293,9 @@ namespace Lima
 
     public MyTuple<int, string, long, string> GetTuple()
     {
-      return new MyTuple<int, string, long, string>(Index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, _terminalAction?.Id ?? "");
+      var terminalId = _terminalAction?.Id ?? "";
+      var terminalActionAndParam = Param == "" ? terminalId : $"{terminalId}|{Param}";
+      return new MyTuple<int, string, long, string>(Index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, terminalActionAndParam);
     }
   }
 }

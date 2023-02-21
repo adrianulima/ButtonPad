@@ -70,10 +70,7 @@ namespace Lima
       foreach (var actBt in _app.ActionButtons)
       {
         var tup = actBt.GetTuple();
-        var blGrpName = tup.Item2;
-        var blockId = tup.Item3;
-        var actionName = tup.Item4;
-        if ((blGrpName == "" && blockId == 0) || actionName == "")
+        if ((tup.Item2 == "" && tup.Item3 == 0) || tup.Item4.Split('|')[0] == "")
           continue;
         buttons.Add(tup);
       }

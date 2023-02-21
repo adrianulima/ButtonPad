@@ -76,12 +76,16 @@ namespace Lima
       {
         var newScale = MathHelper.Min(2.25f, MathHelper.Max(0.75f, CustomScale + Math.Sign(wheelDelta - _prevWheel) * 0.25f));
         var changed = false;
+        var shouldSave = false;
         while (newScale != CustomScale && !changed)
         {
+          shouldSave = true;
           CustomScale = newScale;
           changed = _buttonsView.Reset();
           newScale = MathHelper.Min(2.25f, MathHelper.Max(0.75f, CustomScale + Math.Sign(wheelDelta - _prevWheel) * 0.25f));
         }
+        if (shouldSave)
+          SaveConfigAction?.Invoke();
       }
       _prevWheel = wheelDelta;
     }
@@ -116,7 +120,8 @@ namespace Lima
         var index = _loadadeAppContent?.Buttons[i].Item1 ?? 0;
         var blGrpName = _loadadeAppContent?.Buttons[i].Item2;
         var blockId = _loadadeAppContent?.Buttons[i].Item3;
-        var actionName = _loadadeAppContent?.Buttons[i].Item4;
+        var splitActionAndParam = _loadadeAppContent?.Buttons[i].Item4.Split('|');
+        var actionName = splitActionAndParam[0];
 
         if ((blGrpName == "" && blockId == 0) || actionName == "")
           continue;
@@ -130,7 +135,11 @@ namespace Lima
         if (blGrp != null)
           _buttonsView.ActionButtons[index].SetAction(blGrp, terminalAction);
         else
+        {
           _buttonsView.ActionButtons[index].SetAction(block, terminalAction);
+          if (splitActionAndParam.Length > 1)
+            _buttonsView.ActionButtons[index].Param = splitActionAndParam[1];
+        }
       }
     }
 

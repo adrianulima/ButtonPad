@@ -2,45 +2,14 @@ using Sandbox.ModAPI.Interfaces;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using VRage.Game.ModAPI;
 using VRage.Game;
 using Sandbox.Game.Entities;
-using Sandbox.Definitions;
-using VRage.Collections;
 
 namespace Lima.ButtonPad
 {
   internal static class Utils
   {
-    internal static string GetBlockTexture(IMyCubeBlock block, ListReader<MyLCDTextureDefinition> definitions)
-    {
-      var subType = block.BlockDefinition.SubtypeName;
-      if (subType == "")
-        subType = block.BlockDefinition.TypeIdString;
-
-      foreach (var item in definitions)
-        if (item.Id.SubtypeName == $"Lima/Blocks/{subType}")
-          return $"Lima/Blocks/{subType}";
-
-      return "Lima/Blocks/Block";
-    }
-
-    internal static string GetBlockGroupTexture(IMyBlockGroup blockGroup, ListReader<MyLCDTextureDefinition> definitions)
-    {
-      List<IMyTerminalBlock> blocks = new List<IMyTerminalBlock>();
-      blockGroup.GetBlocks(blocks);
-
-      HashSet<Type> hashSet = new HashSet<Type>();
-      foreach (var myTerminalBlock in blocks)
-        hashSet.Add(myTerminalBlock.GetType());
-
-      if (hashSet.Count == 1)
-        return GetBlockTexture(blocks[0], definitions);
-      else
-        return "Lima/Blocks/Group";
-    }
-
     internal static void GetBlockGroupActions(IMyBlockGroup blockGroup, List<ITerminalAction> actions)
     {
       List<IMyTerminalBlock> blocks = new List<IMyTerminalBlock>();
