@@ -9,6 +9,8 @@ using VRage.Game.ModAPI;
 using VRage;
 using VRageMath;
 using TerminalActionParameter = Sandbox.ModAPI.Ingame.TerminalActionParameter;
+using Sandbox.Game.Entities;
+using VRage.Game.Entity;
 
 namespace Lima
 {
@@ -47,6 +49,9 @@ namespace Lima
       }
     }
 
+    private MySoundPair _sound;
+    private MyEntity3DSoundEmitter _soundEmitter;
+
     public ActionButton(ButtonPadApp pad, int index)
     {
       _padApp = pad;
@@ -77,6 +82,9 @@ namespace Lima
       Button.AddChild(_statusLabel);
 
       Button.RegisterUpdate(Update);
+
+      _sound = new MySoundPair("HudMouseClick");
+      _soundEmitter = new MyEntity3DSoundEmitter(null);
     }
 
     private void Update()
@@ -104,7 +112,14 @@ namespace Lima
         Button.Disabled = false;
 
       if (Button.Handler.IsMousePressed && !ctrl && !shift)
+      {
         Button.BgColor = _padApp.Theme.GetMainColorDarker(8);
+        if (_terminalAction != null & _block != null)
+        {
+          var text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
+          _padApp.ShowNotification($"{text} - {_terminalAction.Name.ToString()}{GetParamString()}");
+        }
+      }
       else if (Button.Handler.IsMouseOver)
       {
         var hoverColor = _padApp.Theme.GetMainColorDarker(5);
@@ -175,6 +190,8 @@ namespace Lima
       {
         _blocks.Clear();
         _blockGroup.GetBlocks(_blocks);
+
+        _soundEmitter.PlaySound(_sound, force2D: true, force3D: false);
         foreach (var bl in _blocks)
           ApplyAction(bl);
       }
@@ -182,7 +199,10 @@ namespace Lima
       {
         var hasConnection = MyAPIGateway.GridGroups.HasConnection(_padApp.Screen.Block.CubeGrid as IMyCubeGrid, _block.CubeGrid, GridLinkTypeEnum.Logical);
         if (hasConnection && Utils.IsOwnerOrFactionShare(_block, MyAPIGateway.Session.Player))
+        {
+          _soundEmitter.PlaySound(_sound, force2D: true, force3D: false);
           ApplyAction(_block);
+        }
         else
           MyAPIGateway.Utilities.ShowNotification("Activation Failed", 3000, "Red");
         // TODO: Consider move to app._notification
@@ -359,12 +379,15 @@ namespace Lima
     {
       Button.UnregisterUpdate(Update);
       ClearAction();
+      _soundEmitter?.Cleanup();
       _padApp = null;
       _statusLabel = null;
       _icon = null;
       Button = null;
       _name = null;
       _blocks = null;
+      _sound = null;
+      _soundEmitter = null;
     }
 
     public MyTuple<int, string, long, string> GetTuple()
