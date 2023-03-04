@@ -215,6 +215,9 @@ namespace Lima
 
     public void SelectActionConfirm(bool save = true)
     {
+      if (_paramView.Enabled)
+        _paramView.CancelTextfield();
+
       _buttonsView.Enabled = true;
       _actionsView.Enabled = false;
       _paramView.Enabled = false;

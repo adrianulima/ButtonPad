@@ -49,6 +49,11 @@ namespace Lima
       _padApp.SelectActionConfirm();
     }
 
+    public void CancelTextfield()
+    {
+      _textField?.CancelEdit();
+    }
+
     public void Dispose()
     {
       _padApp = null;
