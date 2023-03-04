@@ -10,7 +10,6 @@ using VRage;
 using VRageMath;
 using TerminalActionParameter = Sandbox.ModAPI.Ingame.TerminalActionParameter;
 using Sandbox.Game.Entities;
-using VRage.Game.Entity;
 
 namespace Lima
 {
@@ -143,8 +142,10 @@ namespace Lima
           if (TextMode == 0)
             changeTo = "\"Block Name\"";
           else if (TextMode == 1)
-            changeTo = "\"Both Names\"";
+            changeTo = "\"Block Name and Value\"";
           else if (TextMode == 2)
+            changeTo = "\"Action Name and Value\"";
+          else if (TextMode == 3)
             changeTo = "\"No Text\"";
           _padApp.ShowNotification($"Switch to {changeTo}");
         }
@@ -180,7 +181,7 @@ namespace Lima
       else if (_padApp.Screen.IsOnScreen && !MyAPIGateway.Input.IsAnyCtrlKeyPressed() && MyAPIGateway.Input.IsAnyShiftKeyPressed())
       {
         TextMode++;
-        if (TextMode > 3)
+        if (TextMode > 4)
           TextMode = 0;
         _padApp.SelectActionConfirm();
         return;
@@ -357,6 +358,20 @@ namespace Lima
         _extraLabel.TextColor = GetBrighterColor(_padApp.Theme.MainColor);
         _extraLabel.FontSize = _statusLabel.FontSize * 0.7f;
         _extraLabel.Text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
+      }
+      else if (TextMode == 3)
+      {
+        _statusLabel.Text = (text == "Run" && _param != "") ? $"{text} \"{_param}\"" : text;
+        _extraLabel.Enabled = true;
+        var p = new Vector2(Button.Position.X, _statusLabel.Position.Y - _extraLabel.GetSize().Y * 0.7f);
+        if (p != _extraLabel.Position)
+        {
+          _extraLabel.Position = p;
+          _dirty = true;
+        }
+        _extraLabel.TextColor = GetBrighterColor(_padApp.Theme.MainColor);
+        _extraLabel.FontSize = _statusLabel.FontSize * 0.7f;
+        _extraLabel.Text = _terminalAction.Name.ToString();
       }
       else
         _statusLabel.Text = "";
