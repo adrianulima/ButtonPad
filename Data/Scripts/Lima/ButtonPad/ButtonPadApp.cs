@@ -49,6 +49,8 @@ namespace Lima
       AddChild(_paramView);
 
       RegisterUpdate(Update);
+
+      this.Screen.InteractiveDistance = 6;
     }
 
     int _prevWheel = 0;
