@@ -22,16 +22,13 @@ namespace Lima
 
     private IMyHudNotification _notification;
 
-    public ButtonPadApp(Action saveConfigAction)
+    public ButtonPadApp(IMyCubeBlock block, IMyTextSurface surface, Action saveConfigAction) : base(block, surface)
     {
       Direction = ViewDirection.Column;
 
       _notification = MyAPIGateway.Utilities.CreateNotification(string.Empty);
       SaveConfigAction = saveConfigAction;
-    }
 
-    public void CreateElements()
-    {
       _buttonsView = new ButtonPadView(this);
       _buttonsView.Enabled = true;
       AddChild(_buttonsView);

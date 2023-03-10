@@ -24,7 +24,7 @@ namespace Lima
 
       _label = new TouchLabel("Argument", 0.5f, TextAlignment.CENTER);
       AddChild(_label);
-      _textField = new TouchTextField("", (string s, bool b) => { });
+      _textField = new TouchTextField();
       AddChild(_textField);
       _button = new TouchButton("Confirm", OnConfirm);
       AddChild(_button);
@@ -51,7 +51,7 @@ namespace Lima
 
     public void CancelTextfield()
     {
-      _textField?.CancelEdit();
+      _textField?.Blur();
     }
 
     public void Dispose()

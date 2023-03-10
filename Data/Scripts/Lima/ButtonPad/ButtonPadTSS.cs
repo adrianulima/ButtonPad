@@ -49,12 +49,10 @@ namespace Lima
         return;
       _init = true;
 
-      _app = new ButtonPadApp(SaveConfigAction);
-      _app.InitApp(this.Block, this.Surface);
+      _app = new ButtonPadApp(_block, _surface, SaveConfigAction);
 
       if (this.Surface.SurfaceSize.X <= 256)
         _app.Theme.Scale = _app.Cursor.Scale = 0.75f;
-      _app.CreateElements();
 
       var appContent = TouchButtonPadSession.Instance.BlockHandler.LoadAppContent(_block, _surface.Name);
       if (appContent != null)
