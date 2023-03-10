@@ -89,7 +89,7 @@ namespace Lima
       button.Gap = 4;
       button.Padding = new Vector4(4);
       button.Pixels = Vector2.Zero;
-      button.Scale = new Vector2(small ? 1 : 0.5f, 1);
+      button.Flex = new Vector2(small ? 1 : 0.5f, 1);
       button.Label.AutoEllipsis = LabelEllipsis.Left;
       button.Label.AutoBreakLine = true;
       if (smallWidth)
@@ -117,7 +117,7 @@ namespace Lima
       var icon = new Icon(iconString, new Vector2(iconSize), 0, color);
       icon.Absolute = false;
       icon.Pixels = new Vector2(iconSize);
-      icon.Scale = Vector2.Zero;
+      icon.Flex = Vector2.Zero;
       button.AddChild(icon, 0);
 
       var w = smallWidth ? 72 : 40;
@@ -128,7 +128,7 @@ namespace Lima
       {
         var view = new TouchView(ViewDirection.Row);
         view.Gap = 2;
-        view.Scale = new Vector2(1, 0);
+        view.Flex = new Vector2(1, 0);
         view.Pixels = new Vector2(0, h);
         view.AddChild(button);
         AddChild(view);

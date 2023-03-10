@@ -38,9 +38,9 @@ namespace Lima
       var sizeX = GetSize().X;
       var w = new Vector2(MathHelper.Min(256, sizeX), _textField.Pixels.Y);
       _textField.Pixels = w;
-      _textField.Scale = Vector2.Zero;
+      _textField.Flex = Vector2.Zero;
       _button.Pixels = w;
-      _button.Scale = Vector2.Zero;
+      _button.Flex = Vector2.Zero;
     }
 
     public void OnConfirm()

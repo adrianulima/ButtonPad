@@ -80,7 +80,7 @@ namespace Lima
       button.Label.AutoBreakLine = true;
       button.Label.MaxLines = 3;
       button.Pixels = new Vector2(0, h);
-      button.Scale = new Vector2(1, 0);
+      button.Flex = new Vector2(1, 0);
       AddChild(button);
       _buttons.Add(button);
 

@@ -61,13 +61,13 @@ namespace Lima
       Button.Alignment = ViewAlignment.Center;
       Button.Anchor = ViewAnchor.SpaceAround;
       Button.Pixels = Vector2.Zero;
-      Button.Scale = Vector2.One;
+      Button.Flex = Vector2.One;
       Button.Gap = 4;
 
       _icon = new Icon("", new Vector2(40), 0, _gray);
       _icon.Absolute = false;
       _icon.Pixels = Vector2.Zero;
-      _icon.Scale = Vector2.One;
+      _icon.Flex = Vector2.One;
       Button.AddChild(_icon);
 
       _extraLabel = new TouchLabel("");
