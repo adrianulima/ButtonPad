@@ -7,13 +7,13 @@ using VRageMath;
 
 namespace Lima
 {
-  public class SelectBlockView : TouchScrollView
+  public class SelectBlockView : ScrollView
   {
     private ButtonPadApp _padApp;
-    private List<TouchButton> _buttons = new List<TouchButton>();
+    private List<Button> _buttons = new List<Button>();
 
     private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
-    private List<TouchView> _views = new List<TouchView>();
+    private List<View> _views = new List<View>();
     private List<IMyBlockGroup> _blockGroups = new List<IMyBlockGroup>();
 
     private float _step = 0;
@@ -57,10 +57,10 @@ namespace Lima
       var border = new Vector4(2, 0, 0, 0);
 
       var odd = 0;
-      TouchView lastView = null;
+      View lastView = null;
       foreach (var blgr in _blockGroups)
       {
-        var bt = new TouchButton($"*{blgr.Name}*", () => SelectBlockGroup(blgr, actionBt));
+        var bt = new Button($"*{blgr.Name}*", () => SelectBlockGroup(blgr, actionBt));
         bt.BorderColor = darker7;
         bt.Border = border;
         lastView = AddButton(bt, TouchButtonPadSession.Instance.Api.GetBlockGroupIconSprite(blgr), odd, lastView, gray);
@@ -70,7 +70,7 @@ namespace Lima
       foreach (var bl in _blocks)
       {
         var same = cubeGrid.EntityId == bl.CubeGrid.EntityId;
-        var bt = new TouchButton(bl.DisplayNameText.ToString(), () => SelectBlock(bl, actionBt));
+        var bt = new Button(bl.DisplayNameText.ToString(), () => SelectBlock(bl, actionBt));
         bt.BorderColor = same ? darker7 : golden;
         bt.Border = border;
         lastView = AddButton(bt, TouchButtonPadSession.Instance.Api.GetBlockIconSprite(bl), odd, lastView, gray);
@@ -78,7 +78,7 @@ namespace Lima
       }
     }
 
-    private TouchView AddButton(TouchButton button, string iconString, int odd, TouchView lastView, Color color)
+    private View AddButton(Button button, string iconString, int odd, View lastView, Color color)
     {
       var cols = 2;
       var small = _padApp.Theme.Scale < 1;
@@ -126,7 +126,7 @@ namespace Lima
         lastView.AddChild(button);
       else
       {
-        var view = new TouchView(ViewDirection.Row);
+        var view = new View(ViewDirection.Row);
         view.Gap = 2;
         view.Flex = new Vector2(1, 0);
         view.Pixels = new Vector2(0, h);

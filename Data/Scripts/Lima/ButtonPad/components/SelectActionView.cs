@@ -9,11 +9,11 @@ using VRageMath;
 
 namespace Lima
 {
-  public class SelectActionView : TouchScrollView
+  public class SelectActionView : ScrollView
   {
     private ButtonPadApp _padApp;
     private List<ITerminalAction> _terminalActions = new List<ITerminalAction>();
-    private List<TouchButton> _buttons = new List<TouchButton>();
+    private List<Button> _buttons = new List<Button>();
 
     private float _step = 0;
 
@@ -42,7 +42,7 @@ namespace Lima
       _buttons.Clear();
       foreach (var act in _terminalActions)
       {
-        var bt = new TouchButton(act.Name.ToString(), () => SelectGroupAction(blockGroup, actionBt, act));
+        var bt = new Button(act.Name.ToString(), () => SelectGroupAction(blockGroup, actionBt, act));
         AddButton(bt);
       }
     }
@@ -56,12 +56,12 @@ namespace Lima
       _buttons.Clear();
       foreach (var act in _terminalActions)
       {
-        var bt = new TouchButton(act.Name.ToString(), () => SelectAction(block, actionBt, act));
+        var bt = new Button(act.Name.ToString(), () => SelectAction(block, actionBt, act));
         AddButton(bt);
       }
     }
 
-    private void AddButton(TouchButton button)
+    private void AddButton(Button button)
     {
       var height = _padApp.Screen.Surface.SurfaceSize.Y;
       var smallHeight = height < 128;

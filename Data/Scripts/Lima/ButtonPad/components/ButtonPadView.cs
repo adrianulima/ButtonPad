@@ -4,7 +4,7 @@ using VRageMath;
 
 namespace Lima
 {
-  public class ButtonPadView : TouchView
+  public class ButtonPadView : View
   {
     private ButtonPadApp _padApp;
 
@@ -58,7 +58,7 @@ namespace Lima
 
       for (int i = 0; i < _rows; i++)
       {
-        var rowView = new TouchView(ViewDirection.Row);
+        var rowView = new View(ViewDirection.Row);
         rowView.Gap = 4;
         AddChild(rowView);
 

@@ -4,12 +4,12 @@ using VRageMath;
 
 namespace Lima
 {
-  public class ParameterView : TouchView
+  public class ParameterView : View
   {
     private ButtonPadApp _padApp;
-    private TouchLabel _label;
-    private TouchTextField _textField;
-    private TouchButton _button;
+    private Label _label;
+    private TextField _textField;
+    private Button _button;
 
     private ActionButton _actionbutton;
 
@@ -22,11 +22,11 @@ namespace Lima
       Anchor = ViewAnchor.Center;
       Padding = new Vector4(8, 4, 8, 4);
 
-      _label = new TouchLabel("Argument", 0.5f, TextAlignment.CENTER);
+      _label = new Label("Argument", 0.5f, TextAlignment.CENTER);
       AddChild(_label);
-      _textField = new TouchTextField();
+      _textField = new TextField();
       AddChild(_textField);
-      _button = new TouchButton("Confirm", OnConfirm);
+      _button = new Button("Confirm", OnConfirm);
       AddChild(_button);
     }
 

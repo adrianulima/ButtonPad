@@ -15,9 +15,9 @@ namespace Lima
 {
   public class ActionButton
   {
-    public TouchEmptyButton Button;
-    private TouchLabel _extraLabel;
-    private TouchLabel _statusLabel;
+    public EmptyButton Button;
+    private Label _extraLabel;
+    private Label _statusLabel;
     private Icon _icon;
 
     private ButtonPadApp _padApp;
@@ -56,7 +56,7 @@ namespace Lima
       _padApp = pad;
       Index = index;
 
-      Button = new TouchEmptyButton(OnClickButton);
+      Button = new EmptyButton(OnClickButton);
       Button.UseThemeColors = false;
       Button.Alignment = ViewAlignment.Center;
       Button.Anchor = ViewAnchor.SpaceAround;
@@ -70,13 +70,13 @@ namespace Lima
       _icon.Flex = Vector2.One;
       Button.AddChild(_icon);
 
-      _extraLabel = new TouchLabel("");
+      _extraLabel = new Label("");
       _extraLabel.FontSize = 0.8f;
       _extraLabel.Enabled = false;
       _extraLabel.Absolute = true;
       Button.AddChild(_extraLabel);
 
-      _statusLabel = new TouchLabel("");
+      _statusLabel = new Label("");
       _statusLabel.FontSize = 0.8f;
       Button.AddChild(_statusLabel);
 
