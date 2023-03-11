@@ -62,8 +62,8 @@ namespace Lima
       if (_actionsView.Enabled)
         _actionsView.UpdateScrollStep();
 
-      var anyPressed = MyAPIGateway.Input.IsAnyMouseOrJoystickPressed();
-      if (MyAPIGateway.Gui.IsCursorVisible || (!_pressedInside && !Screen.IsOnScreen && anyPressed))
+      var anyPressed = Screen.Mouse1.IsPressed || MyAPIGateway.Input.IsAnyMouseOrJoystickPressed();
+      if (MyAPIGateway.Gui.IsCursorVisible || (!_pressedInside && !Screen.IsOnScreen && anyPressed) || Screen.Mouse2.IsPressed)
         SelectActionConfirm(false);
 
       _pressedInside = _pressedInside || (Screen.IsOnScreen && anyPressed);

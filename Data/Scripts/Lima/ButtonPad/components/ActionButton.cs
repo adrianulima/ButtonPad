@@ -91,7 +91,7 @@ namespace Lima
       var ctrl = _padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed() && !MyAPIGateway.Input.IsAnyShiftKeyPressed();
       var shift = _padApp.Screen.IsOnScreen && !MyAPIGateway.Input.IsAnyCtrlKeyPressed() && MyAPIGateway.Input.IsAnyShiftKeyPressed();
 
-      if ((!ctrl || !Button.Handler.IsMouseOver) && _icon.SpriteImage != _iconString)
+      if ((!ctrl || !Button.Handler.Mouse1.IsOver) && _icon.SpriteImage != _iconString)
       {
         _icon.SpriteImage = _iconString;
         SetBtText(_statusText);
@@ -110,7 +110,7 @@ namespace Lima
       if (ctrl)
         Button.Disabled = false;
 
-      if (Button.Handler.IsMousePressed && !ctrl && !shift)
+      if (Button.Handler.Mouse1.IsPressed && !ctrl && !shift)
       {
         Button.BgColor = _padApp.Theme.GetMainColorDarker(8);
         if (_terminalAction != null & _block != null)
@@ -119,7 +119,7 @@ namespace Lima
           _padApp.ShowNotification($"{text} - {_terminalAction.Name.ToString()}{GetParamString()}");
         }
       }
-      else if (Button.Handler.IsMouseOver)
+      else if (Button.Handler.Mouse1.IsOver)
       {
         var hoverColor = _padApp.Theme.GetMainColorDarker(5);
         if (_terminalAction != null && ctrl)
