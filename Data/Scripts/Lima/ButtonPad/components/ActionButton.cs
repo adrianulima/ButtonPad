@@ -32,7 +32,7 @@ namespace Lima
 
     private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
     public int Index = -1;
-    public int TextMode = 0;
+    public int TextMode = 2;
 
     private ListReader<TerminalActionParameter> _paramList;
     private string _param = "";
@@ -138,13 +138,13 @@ namespace Lima
         else if (_terminalAction != null && shift)
         {
           _statusLabel.TextColor = new Color(140, 140, 0);
-          var changeTo = "\"Action Value\"";
+          var changeTo = "\"Current Value\"";
           if (TextMode == 0)
             changeTo = "\"Block Name\"";
           else if (TextMode == 1)
-            changeTo = "\"Block Name and Value\"";
+            changeTo = "\"Block Name and Current Value\"";
           else if (TextMode == 2)
-            changeTo = "\"Action Name and Value\"";
+            changeTo = "\"Action Name and Current Value\"";
           else if (TextMode == 3)
             changeTo = "\"No Text\"";
           _padApp.ShowNotification($"Switch to {changeTo}");
@@ -228,14 +228,14 @@ namespace Lima
       if (actBt?._blockGroup != null)
       {
         SetAction(actBt._blockGroup, actBt._terminalAction);
-        TextMode = actBt?.TextMode ?? 0;
+        TextMode = actBt?.TextMode ?? 2;
       }
       else if (actBt?._block != null)
       {
         SetAction(actBt._block, actBt._terminalAction);
         if (actBt.Param != "")
           Param = actBt.Param;
-        TextMode = actBt?.TextMode ?? 0;
+        TextMode = actBt?.TextMode ?? 2;
       }
     }
 
@@ -244,7 +244,7 @@ namespace Lima
       _blockGroup = blockGroup;
       _terminalAction = terminalAction;
       Param = "";
-      TextMode = 0;
+      TextMode = 2;
 
       _blocks.Clear();
       blockGroup.GetBlocks(_blocks);

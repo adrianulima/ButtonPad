@@ -105,7 +105,7 @@ namespace Lima
     private void SelectGroupAction(IMyBlockGroup blockGroup, ActionButton actionBt, ITerminalAction action)
     {
       actionBt.SetAction(blockGroup, action);
-      _padApp.SelectActionConfirm();
+      _padApp.ShowSelectLayoutView(actionBt);
     }
 
     private void SelectAction(IMyCubeBlock block, ActionButton actionBt, ITerminalAction action)
@@ -115,7 +115,7 @@ namespace Lima
       if (block is IMyProgrammableBlock && action.Id == "Run")
         _padApp.ShowSelectArgumentView(actionBt);
       else
-        _padApp.SelectActionConfirm();
+        _padApp.ShowSelectLayoutView(actionBt);
     }
   }
 }

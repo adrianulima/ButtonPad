@@ -46,7 +46,7 @@ namespace Lima
     public void OnConfirm()
     {
       _actionbutton.Param = _textField.Text;
-      _padApp.SelectActionConfirm();
+      _padApp.ShowSelectLayoutView(_actionbutton);
     }
 
     public void CancelTextfield()

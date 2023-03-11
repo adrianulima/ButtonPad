@@ -18,6 +18,7 @@ namespace Lima
     private SelectActionView _actionsView;
     private SelectBlockView _blocksView;
     private ParameterView _paramView;
+    private SelectLayoutView _layoutView;
     private AppContent? _loadadeAppContent;
 
     private IMyHudNotification _notification;
@@ -45,9 +46,13 @@ namespace Lima
       _paramView.Enabled = false;
       AddChild(_paramView);
 
+      _layoutView = new SelectLayoutView(this);
+      _layoutView.Enabled = false;
+      AddChild(_layoutView);
+
       RegisterUpdate(Update);
 
-      this.Screen.InteractiveDistance = 6;
+      // this.Screen.InteractiveDistance = 6;
     }
 
     int _prevWheel = 0;
@@ -61,6 +66,8 @@ namespace Lima
         _blocksView.UpdateScrollStep();
       if (_actionsView.Enabled)
         _actionsView.UpdateScrollStep();
+      if (_layoutView.Enabled)
+        _layoutView.UpdateScrollStep();
 
       var anyPressed = Screen.Mouse1.IsPressed || MyAPIGateway.Input.IsAnyMouseOrJoystickPressed();
       if (MyAPIGateway.Gui.IsCursorVisible || (!_pressedInside && !Screen.IsOnScreen && anyPressed) || Screen.Mouse2.IsPressed)
@@ -73,7 +80,7 @@ namespace Lima
       var wheelDelta = MyAPIGateway.Input.MouseScrollWheelValue();
       if (_buttonsView.Enabled && Screen.IsOnScreen && wheelDelta != _prevWheel && MyAPIGateway.Input.IsAnyCtrlKeyPressed() && MyAPIGateway.Input.IsAnyShiftKeyPressed())
       {
-        var newScale = MathHelper.Min(2.25f, MathHelper.Max(0.75f, CustomScale + Math.Sign(wheelDelta - _prevWheel) * 0.25f));
+        var newScale = MathHelper.Min(2.25f, MathHelper.Max(0.5f, CustomScale + Math.Sign(wheelDelta - _prevWheel) * 0.25f));
         var changed = false;
         var shouldSave = false;
         while (newScale != CustomScale && !changed)
@@ -178,6 +185,7 @@ namespace Lima
       _actionsView.Enabled = false;
       _paramView.Enabled = false;
       _blocksView.Enabled = true;
+      _layoutView.Enabled = false;
 
       _blocksView.UpdateItemsForButton(actionBt, Screen.Block.CubeGrid as IMyCubeGrid);
     }
@@ -188,6 +196,7 @@ namespace Lima
       _actionsView.Enabled = true;
       _paramView.Enabled = false;
       _blocksView.Enabled = false;
+      _layoutView.Enabled = false;
 
       _actionsView.UpdateItemsForButton(actionBt, block);
     }
@@ -198,6 +207,7 @@ namespace Lima
       _actionsView.Enabled = true;
       _paramView.Enabled = false;
       _blocksView.Enabled = false;
+      _layoutView.Enabled = false;
 
       _actionsView.UpdateItemsForButton(actionBt, blockGroup);
     }
@@ -208,19 +218,31 @@ namespace Lima
       _actionsView.Enabled = false;
       _blocksView.Enabled = false;
       _paramView.Enabled = true;
+      _layoutView.Enabled = false;
 
       _paramView.UpdateForButton(actionBt);
     }
 
+    public void ShowSelectLayoutView(ActionButton actionBt)
+    {
+      _buttonsView.Enabled = false;
+      _actionsView.Enabled = false;
+      _blocksView.Enabled = false;
+      _paramView.Enabled = false;
+      _layoutView.Enabled = true;
+
+      _layoutView.UpdateItemsForButton(actionBt);
+    }
+
     public void SelectActionConfirm(bool save = true)
     {
-      if (_paramView.Enabled)
-        _paramView.CancelTextfield();
+      _paramView.CancelTextfield();
 
       _buttonsView.Enabled = true;
       _actionsView.Enabled = false;
       _paramView.Enabled = false;
       _blocksView.Enabled = false;
+      _layoutView.Enabled = false;
 
       if (save)
         SaveConfigAction?.Invoke();
