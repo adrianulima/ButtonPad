@@ -115,7 +115,7 @@ namespace Lima
       if (CustomScale != 1)
         _buttonsView.Reset();
 
-      var count = _loadadeAppContent?.Buttons?.Count ?? 0;
+      var count = _loadadeAppContent?.ButtonsList.Count ?? 0;
       var terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Screen.Block.CubeGrid as IMyCubeGrid);
       if (terminalSystem == null)
         return;
@@ -123,18 +123,42 @@ namespace Lima
       count = (int)MathHelper.Min(count, _buttonsView.ActionButtons.Count);
       for (int i = 0; i < count; i++)
       {
-        var index = _loadadeAppContent?.Buttons[i].Item1 ?? 0;
-        var blGrpName = _loadadeAppContent?.Buttons[i].Item2;
-        var blockId = _loadadeAppContent?.Buttons[i].Item3;
-        var splitActionAndParam = _loadadeAppContent?.Buttons[i].Item4.Split('|');
+        var index = _loadadeAppContent?.ButtonsList[i].Item1 ?? 0;
+        var blGrpName = _loadadeAppContent?.ButtonsList[i].Item2;
+        var blockId = _loadadeAppContent?.ButtonsList[i].Item3;
+        var splitActionAndParam = _loadadeAppContent?.ButtonsList[i].Item4.Split('|');
+        var position = _loadadeAppContent?.ButtonsList[i].Item5;
         var actionName = splitActionAndParam[0];
 
-        if ((blGrpName == "" && blockId == 0) || actionName == "")
+        if ((blGrpName == "" && blockId == 0 && position == Vector3I.MaxValue) || actionName == "")
           continue;
 
-        var block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
+        IMyCubeBlock block;
+        if (position != Vector3I.MaxValue)
+        {
+          Matrix mtr;
+          Screen.Block.Orientation.GetMatrix(out mtr);
+          mtr.TransposeRotationInPlace();
+          mtr = Matrix.Invert(mtr);
+
+          Vector3I lcdPos = Screen.Block.Position;
+          Vector3I pos = position ?? Vector3I.Zero;
+          Vector3I.Transform(ref pos, ref mtr, out pos);
+          Vector3I blockPos = new Vector3I(lcdPos.X - pos.X, lcdPos.Y - pos.Y, lcdPos.Z - pos.Z);
+
+          var slimBlock = Screen.Block.CubeGrid.GetCubeBlock(blockPos);
+          block = slimBlock?.FatBlock as IMyCubeBlock;
+        }
+        else
+        {
+          block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
+        }
+
         if (block == null)
+        {
+          // TODO: Implement pending to construct state (not found instead of ignore)
           continue;
+        }
 
         var terminalAction = actionName != "" ? MyAPIGateway.TerminalActionsHelper.GetActionWithName(actionName, block.GetType()) : null;
         var blGrp = blGrpName != "" ? terminalSystem.GetBlockGroupWithName(blGrpName) : null;

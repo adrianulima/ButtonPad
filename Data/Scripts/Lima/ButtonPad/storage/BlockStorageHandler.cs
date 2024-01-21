@@ -6,9 +6,12 @@ using System;
 using VRage.Game.ModAPI;
 using VRage.Utils;
 using VRage;
+using VRageMath;
 
 namespace Lima
 {
+  using ButtonTarget = MyTuple<int, string, long, string, Vector3I>;
+
   [ProtoContract(UseProtoMembersOnly = true)]
   public class BlockStorageContent : NetworkMessage
   {
@@ -46,6 +49,7 @@ namespace Lima
     [ProtoMember(1)]
     public string SurfaceName;
 
+    [Obsolete("Buttons is deprecated, use ButtonsList instead.")]
     [ProtoMember(2)]
     public List<MyTuple<int, string, long, string>> Buttons;
 
@@ -54,6 +58,31 @@ namespace Lima
 
     [ProtoMember(4)]
     public float? ThemeScale;
+
+    private List<ButtonTarget> _buttons;
+    [ProtoMember(5)]
+    public List<ButtonTarget> ButtonsList
+    {
+      set { _buttons = value; }
+      get
+      {
+        // This workaround is needed to keep old savegames working
+        // Buttons variable is not being used after Jan 2024
+        if (_buttons != null)
+          return _buttons;
+
+        _buttons = new List<ButtonTarget>();
+
+        if (Buttons == null)
+          return _buttons;
+
+        foreach (var bt in Buttons)
+          _buttons.Add(new ButtonTarget(bt.Item1, bt.Item2, bt.Item3, bt.Item4, Vector3I.MaxValue));
+        Buttons = null;
+
+        return _buttons;
+      }
+    }
   }
 
   public class BlockStorageHandler

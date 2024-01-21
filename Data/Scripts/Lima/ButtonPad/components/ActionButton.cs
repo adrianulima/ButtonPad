@@ -405,10 +405,31 @@ namespace Lima
       _soundEmitter = null;
     }
 
-    public MyTuple<int, string, long, string> GetTuple()
+    public MyTuple<int, string, long, string, Vector3I> GetTuple()
     {
+      Vector3I position = Vector3I.MaxValue;
+      if (_block?.CubeGrid.EntityId == _padApp.Screen.Block.CubeGrid.EntityId)
+      {
+        if (_block?.EntityId == _padApp.Screen.Block.EntityId)
+        {
+          position = Vector3I.Zero;
+        }
+        else if (_block != null)
+        {
+          Matrix mtr;
+          _padApp.Screen.Block.Orientation.GetMatrix(out mtr);
+          mtr.TransposeRotationInPlace();
+
+          Vector3I lcdPos = _padApp.Screen.Block.Position;
+          Vector3I blockPos = _block.Position;
+
+          position = new Vector3I(lcdPos.X - blockPos.X, lcdPos.Y - blockPos.Y, lcdPos.Z - blockPos.Z);
+          Vector3I.Transform(ref position, ref mtr, out position);
+        }
+      }
+
       var terminalActionAndParam = $"{_terminalAction?.Id ?? ""}|{TextMode}|{Param}";
-      return new MyTuple<int, string, long, string>(Index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, terminalActionAndParam);
+      return new MyTuple<int, string, long, string, Vector3I>(Index, _blockGroup?.Name ?? "", _block?.EntityId ?? 0, terminalActionAndParam, position);
     }
   }
 }

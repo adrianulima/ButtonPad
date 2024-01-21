@@ -64,7 +64,7 @@ namespace Lima
 
     private void SaveConfigAction()
     {
-      var buttons = new List<MyTuple<int, string, long, string>>();
+      var buttons = new List<MyTuple<int, string, long, string, Vector3I>>();
       foreach (var actBt in _app.ActionButtons)
       {
         var tup = actBt.GetTuple();
@@ -77,8 +77,8 @@ namespace Lima
       {
         SurfaceName = _surface.Name,
         CustomScale = _app.CustomScale,
-        Buttons = buttons,
-        ThemeScale = _app.Theme.Scale
+        ThemeScale = _app.Theme.Scale,
+        ButtonsList = buttons
       };
 
       var blockContent = TouchButtonPadSession.Instance.BlockHandler.SaveAppContent(_block, appContent);
