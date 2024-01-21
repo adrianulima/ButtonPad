@@ -84,7 +84,7 @@ namespace Lima
       AddChild(button);
       _buttons.Add(button);
 
-      _step = (button.Pixels.Y + Gap);
+      _step = button.Pixels.Y + Gap;
       UpdateScrollStep();
     }
 

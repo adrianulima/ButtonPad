@@ -5,6 +5,7 @@ using System.Linq;
 using VRage.Game.ModAPI;
 using VRage.Game;
 using Sandbox.Game.Entities;
+using VRageMath;
 
 namespace Lima.ButtonPad
 {
@@ -44,6 +45,38 @@ namespace Lima.ButtonPad
         list2 = list3;
       }
       actions.AddRange(list2);
+    }
+
+    public static Vector3I GetPositionRelativeTo(IMyCubeBlock referenceBlock, IMyCubeBlock targetBlock)
+    {
+      Matrix mtr;
+      referenceBlock.Orientation.GetMatrix(out mtr);
+      mtr.TransposeRotationInPlace();
+
+      Vector3I lcdPos = referenceBlock.Position;
+      Vector3I blockPos = targetBlock.Position;
+
+      var position = new Vector3I(lcdPos.X - blockPos.X, lcdPos.Y - blockPos.Y, lcdPos.Z - blockPos.Z);
+      Vector3I.Transform(ref position, ref mtr, out position);
+
+      return position;
+    }
+
+    public static IMyCubeBlock GetBlockFromRelativePositionTo(IMyCubeBlock referenceBlock, Vector3I? position)
+    {
+      Matrix mtr;
+      referenceBlock.Orientation.GetMatrix(out mtr);
+      mtr.TransposeRotationInPlace();
+      mtr = Matrix.Invert(mtr);
+
+      Vector3I lcdPos = referenceBlock.Position;
+      Vector3I pos = position ?? Vector3I.Zero;
+      Vector3I.Transform(ref pos, ref mtr, out pos);
+      Vector3I blockPos = new Vector3I(lcdPos.X - pos.X, lcdPos.Y - pos.Y, lcdPos.Z - pos.Z);
+
+      var slimBlock = referenceBlock.CubeGrid.GetCubeBlock(blockPos);
+
+      return slimBlock?.FatBlock;
     }
 
     public static bool IsOwnerOrFactionShare(IMyCubeBlock block, IMyPlayer player)

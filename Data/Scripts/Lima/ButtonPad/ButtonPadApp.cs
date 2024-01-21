@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System;
 using VRage.Game.ModAPI;
 using VRageMath;
+using Lima.ButtonPad;
+using Sandbox.Game.GameSystems;
 
 namespace Lima
 {
@@ -20,8 +22,11 @@ namespace Lima
     private ParameterView _paramView;
     private SelectLayoutView _layoutView;
     private AppContent? _loadadeAppContent;
+    private bool _loadaded = false;
 
     private IMyHudNotification _notification;
+
+    private readonly List<int> _pendingActions = new List<int>();
 
     public ButtonPadApp(IMyCubeBlock block, IMyTextSurface surface, Action saveConfigAction) : base(block, surface)
     {
@@ -60,7 +65,6 @@ namespace Lima
     private void Update()
     {
       ApplyLoadedContent();
-      _loadadeAppContent = null;
 
       if (_blocksView.Enabled)
         _blocksView.UpdateScrollStep();
@@ -103,7 +107,7 @@ namespace Lima
 
     private void ApplyLoadedContent()
     {
-      if (_loadadeAppContent == null)
+      if (_loadaded || _loadadeAppContent == null)
         return;
 
       var themeScale = _loadadeAppContent?.ThemeScale ?? 0;
@@ -123,58 +127,89 @@ namespace Lima
       count = (int)MathHelper.Min(count, _buttonsView.ActionButtons.Count);
       for (int i = 0; i < count; i++)
       {
-        var index = _loadadeAppContent?.ButtonsList[i].Item1 ?? 0;
-        var blGrpName = _loadadeAppContent?.ButtonsList[i].Item2;
-        var blockId = _loadadeAppContent?.ButtonsList[i].Item3;
-        var splitActionAndParam = _loadadeAppContent?.ButtonsList[i].Item4.Split('|');
-        var position = _loadadeAppContent?.ButtonsList[i].Item5;
-        var actionName = splitActionAndParam[0];
+        HandleActionLoad(i, terminalSystem);
+      }
 
-        if ((blGrpName == "" && blockId == 0 && position == Vector3I.MaxValue) || actionName == "")
-          continue;
+      if (_pendingActions.Count > 0)
+      {
+        (Screen.Block.CubeGrid as IMyCubeGrid).OnBlockAdded -= OnBlockAddedToGrid;
+        (Screen.Block.CubeGrid as IMyCubeGrid).OnBlockAdded += OnBlockAddedToGrid;
+      }
+      else
+      {
+        _loadadeAppContent = null;
+      }
 
-        IMyCubeBlock block;
-        if (position != Vector3I.MaxValue)
+      _loadaded = true;
+    }
+
+    public bool HandleActionLoad(int i, IMyGridTerminalSystem terminalSystem, bool fromPendingList = false)
+    {
+      var index = _loadadeAppContent?.ButtonsList[i].Item1 ?? 0;
+      var blGrpName = _loadadeAppContent?.ButtonsList[i].Item2;
+      var blockId = _loadadeAppContent?.ButtonsList[i].Item3;
+      var splitActionAndParam = _loadadeAppContent?.ButtonsList[i].Item4.Split('|');
+      var position = _loadadeAppContent?.ButtonsList[i].Item5;
+      var actionName = splitActionAndParam[0];
+
+      if ((blGrpName == "" && blockId == 0 && position == Vector3I.MaxValue) || actionName == "")
+        return false;
+
+      IMyCubeBlock block;
+      if (position != Vector3I.MaxValue)
+      {
+        block = Utils.GetBlockFromRelativePositionTo(Screen.Block as IMyCubeBlock, position);
+      }
+      else
+      {
+        block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
+      }
+
+      if (block == null)
+      {
+        if (!fromPendingList)
         {
-          Matrix mtr;
-          Screen.Block.Orientation.GetMatrix(out mtr);
-          mtr.TransposeRotationInPlace();
-          mtr = Matrix.Invert(mtr);
-
-          Vector3I lcdPos = Screen.Block.Position;
-          Vector3I pos = position ?? Vector3I.Zero;
-          Vector3I.Transform(ref pos, ref mtr, out pos);
-          Vector3I blockPos = new Vector3I(lcdPos.X - pos.X, lcdPos.Y - pos.Y, lcdPos.Z - pos.Z);
-
-          var slimBlock = Screen.Block.CubeGrid.GetCubeBlock(blockPos);
-          block = slimBlock?.FatBlock as IMyCubeBlock;
+          _pendingActions.Add(i);
+          _buttonsView.ActionButtons[index].Pending = true;
         }
-        else
-        {
-          block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
-        }
+        return false;
+      }
 
-        if (block == null)
-        {
-          // TODO: Implement pending to construct state (not found instead of ignore)
-          continue;
-        }
+      var terminalAction = actionName != "" ? MyAPIGateway.TerminalActionsHelper.GetActionWithName(actionName, block.GetType()) : null;
+      var blGrp = blGrpName != "" ? terminalSystem.GetBlockGroupWithName(blGrpName) : null;
 
-        var terminalAction = actionName != "" ? MyAPIGateway.TerminalActionsHelper.GetActionWithName(actionName, block.GetType()) : null;
-        var blGrp = blGrpName != "" ? terminalSystem.GetBlockGroupWithName(blGrpName) : null;
+      var len = splitActionAndParam.Length;
+      if (blGrp != null)
+        _buttonsView.ActionButtons[index].SetAction(blGrp, terminalAction);
+      else
+      {
+        _buttonsView.ActionButtons[index].SetAction(block, terminalAction);
+        if (len > 2)
+          _buttonsView.ActionButtons[index].Param = splitActionAndParam[2];
+      }
 
-        var len = splitActionAndParam.Length;
-        if (blGrp != null)
-          _buttonsView.ActionButtons[index].SetAction(blGrp, terminalAction);
-        else
-        {
-          _buttonsView.ActionButtons[index].SetAction(block, terminalAction);
-          if (len > 2)
-            _buttonsView.ActionButtons[index].Param = splitActionAndParam[2];
-        }
+      if (len > 1)
+        _buttonsView.ActionButtons[index].TextMode = int.Parse(splitActionAndParam[1]);
 
-        if (len > 1)
-          _buttonsView.ActionButtons[index].TextMode = int.Parse(splitActionAndParam[1]);
+      return true;
+    }
+
+    private void OnBlockAddedToGrid(IMySlimBlock slimBlock)
+    {
+      var terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Screen.Block.CubeGrid as IMyCubeGrid);
+      if (terminalSystem == null)
+        return;
+
+      for (int i = _pendingActions.Count - 1; i >= 0; i--)
+      {
+        if (HandleActionLoad(_pendingActions[i], terminalSystem, true))
+          _pendingActions.RemoveAt(i);
+      }
+
+      if (_pendingActions.Count == 0)
+      {
+        (Screen.Block.CubeGrid as IMyCubeGrid).OnBlockAdded -= OnBlockAddedToGrid;
+        _loadadeAppContent = null;
       }
     }
 

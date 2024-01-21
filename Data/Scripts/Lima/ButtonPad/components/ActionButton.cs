@@ -33,6 +33,7 @@ namespace Lima
     private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
     public int Index = -1;
     public int TextMode = 2;
+    public bool Pending = false;
 
     private ListReader<TerminalActionParameter> _paramList;
     private string _param = "";
@@ -91,7 +92,7 @@ namespace Lima
       var ctrl = _padApp.Screen.IsOnScreen && MyAPIGateway.Input.IsAnyCtrlKeyPressed() && !MyAPIGateway.Input.IsAnyShiftKeyPressed();
       var shift = _padApp.Screen.IsOnScreen && !MyAPIGateway.Input.IsAnyCtrlKeyPressed() && MyAPIGateway.Input.IsAnyShiftKeyPressed();
 
-      if ((!ctrl || !Button.Handler.Mouse1.IsOver) && _icon.SpriteImage != _iconString)
+      if ((!ctrl || !Button.Handler.Mouse1.IsOver) && _block != null && _icon.SpriteImage != _iconString)
       {
         _icon.SpriteImage = _iconString;
         SetBtText(_statusText);
@@ -103,6 +104,13 @@ namespace Lima
       {
         Button.Disabled = !_block.IsFunctional;
         disabled = Button.Disabled;
+      }
+      else if (Pending)
+      {
+        _icon.SpriteImage = "Danger";
+        Button.Disabled = true;
+        disabled = Button.Disabled;
+        SetBtText("Pending");
       }
 
       UpdateValue();
@@ -122,7 +130,7 @@ namespace Lima
       else if (Button.Handler.Mouse1.IsOver)
       {
         var hoverColor = _padApp.Theme.GetMainColorDarker(5);
-        if (_terminalAction != null && ctrl)
+        if ((_terminalAction != null || Pending) && ctrl)
         {
           hoverColor = new Color(10, 0, 0);
           if (_icon.SpriteImage != "Cross")
@@ -167,7 +175,7 @@ namespace Lima
 
     private void OnClickButton()
     {
-      if (_terminalAction == null)
+      if (!Pending && _terminalAction == null)
       {
         _padApp.ShowSelectBlockView(this);
         return;
@@ -186,6 +194,9 @@ namespace Lima
         _padApp.SelectActionConfirm();
         return;
       }
+
+      if (Pending)
+        return;
 
       if (_blockGroup != null)
       {
@@ -241,6 +252,7 @@ namespace Lima
 
     public void SetAction(IMyBlockGroup blockGroup, ITerminalAction terminalAction)
     {
+      Pending = false;
       _blockGroup = blockGroup;
       _terminalAction = terminalAction;
       Param = "";
@@ -259,6 +271,7 @@ namespace Lima
 
     public void SetAction(IMyCubeBlock block, ITerminalAction terminalAction)
     {
+      Pending = false;
       _block = block;
       _terminalAction = terminalAction;
       Param = "";
@@ -284,6 +297,9 @@ namespace Lima
 
     private void UpdateValue()
     {
+      _icon.SpriteColor = Button.Disabled ? _padApp.Theme.GetMainColorDarker(4) : _gray;
+      _statusLabel.TextColor = Button.Disabled ? _padApp.Theme.GetMainColorDarker(2) : _padApp.Theme.WhiteColor;
+
       if (_terminalAction == null)
         return;
 
@@ -292,9 +308,6 @@ namespace Lima
         SetBtText("Clear");
         return;
       }
-
-      _icon.SpriteColor = Button.Disabled ? _padApp.Theme.GetMainColorDarker(4) : _gray;
-      _statusLabel.TextColor = Button.Disabled ? _padApp.Theme.GetMainColorDarker(2) : _padApp.Theme.WhiteColor;
 
       _name.Clear();
       if (_block != null)
@@ -315,6 +328,7 @@ namespace Lima
       _blockGroup = null;
       _blocks.Clear();
       Button.Border = Vector4.Zero;
+      Pending = false;
     }
 
     Vector2 _prevSize = Vector2.Zero;
@@ -324,12 +338,13 @@ namespace Lima
     bool _dirty = false;
     private void SetBtText(string text)
     {
-      var scale = (_padApp.Theme?.Scale ?? 1);
+      var scale = _padApp.Theme?.Scale ?? 1;
       var sizeIcon = _icon.GetSize() / scale;
       if (!_dirty && _text == text && _prevSize == sizeIcon && _prevMode == TextMode && _prevColor == _padApp.Screen.Surface.ScriptForegroundColor)
         return;
 
-      UpdateBorderColor();
+      if (_block != null)
+        UpdateBorderColor();
 
       _dirty = false;
       _text = text;
@@ -341,7 +356,11 @@ namespace Lima
       var size = Button.GetSize();
       var defSize = size.X >= 100 ? 0.7f : 0.5f;
       _statusLabel.FontSize = MathHelper.Max(defSize, MathHelper.Min(1, (size.X * defSize) / 100));
-      if (TextMode == 0 || text == "Clear")
+      if (text == "Pending")
+      {
+        _statusLabel.Text = text;
+      }
+      else if (TextMode == 0 || text == "Clear")
         _statusLabel.Text = (text == "Run" && _param != "") ? $"{text} \"{_param}\"" : text;
       else if (TextMode == 1)
         _statusLabel.Text = _blockGroup != null ? $"*{_blockGroup.Name}*" : $"{_block.DisplayNameText}";
@@ -416,15 +435,7 @@ namespace Lima
         }
         else if (_block != null)
         {
-          Matrix mtr;
-          _padApp.Screen.Block.Orientation.GetMatrix(out mtr);
-          mtr.TransposeRotationInPlace();
-
-          Vector3I lcdPos = _padApp.Screen.Block.Position;
-          Vector3I blockPos = _block.Position;
-
-          position = new Vector3I(lcdPos.X - blockPos.X, lcdPos.Y - blockPos.Y, lcdPos.Z - blockPos.Z);
-          Vector3I.Transform(ref position, ref mtr, out position);
+          position = Utils.GetPositionRelativeTo(_padApp.Screen.Block as IMyCubeBlock, _block);
         }
       }
 
