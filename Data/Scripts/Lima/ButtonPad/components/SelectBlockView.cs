@@ -7,10 +7,15 @@ using VRageMath;
 
 namespace Lima
 {
-  public class SelectBlockView : ScrollView
+  public class SelectBlockView : View
   {
     private ButtonPadApp _padApp;
     private List<Button> _buttons = new List<Button>();
+
+    private Button _button;
+    private TextField _textField;
+    private View _searchView;
+    private ScrollView _scrollView;
 
     private List<IMyTerminalBlock> _blocks = new List<IMyTerminalBlock>();
     private List<View> _views = new List<View>();
@@ -18,13 +23,40 @@ namespace Lima
 
     private float _step = 0;
 
+    private ActionButton _lastActionBt;
+    private IMyCubeGrid _lastCubeGrid;
+
     public SelectBlockView(ButtonPadApp pad)
     {
       _padApp = pad;
 
-      ScrollBar.Pixels = new Vector2(24, 0);
       Gap = 2;
-      Padding = new Vector4(2, 1, 2, 1);
+      Padding = new Vector4(2);
+
+      _searchView = new View(ViewDirection.Row);
+      _searchView.Gap = 2;
+      _searchView.Flex = new Vector2(1, 0);
+      _searchView.Pixels = new Vector2(0, 24);
+      _searchView.Alignment = ViewAlignment.Center;
+
+      _textField = new TextField();
+      _textField.Label.Alignment = TextAlignment.LEFT;
+      _textField.Pixels = Vector2.Zero;
+      _textField.Flex = Vector2.One;
+      _textField.OnSubmit = (_text) => UpdateFilter();
+      _searchView.AddChild(_textField);
+
+      _button = new Button("Search", () => UpdateFilter());
+      _button.Pixels = new Vector2(60, 0);
+      _button.Flex = Vector2.UnitY;
+      _searchView.AddChild(_button);
+
+      _scrollView = new ScrollView();
+      _scrollView.ScrollBar.Pixels = new Vector2(24, 0);
+      _scrollView.Padding = new Vector4(0, 0, 1, 0);
+
+      AddChild(_searchView);
+      AddChild(_scrollView);
     }
 
     public void Dispose()
@@ -38,10 +70,33 @@ namespace Lima
       _blocks = null;
       _blockGroups = null;
       _views = null;
+      _button = null;
+      _textField = null;
+      _searchView = null;
+      _scrollView = null;
+      _lastActionBt = null;
+      _lastCubeGrid = null;
     }
 
-    public void UpdateItemsForButton(ActionButton actionBt, IMyCubeGrid cubeGrid)
+    private void UpdateFilter()
     {
+      UpdateItemsForButton(_lastActionBt, _lastCubeGrid, true);
+    }
+
+    public void UpdateItemsForButton(ActionButton actionBt, IMyCubeGrid cubeGrid, bool filtering = false)
+    {
+      _lastActionBt = actionBt;
+      _lastCubeGrid = cubeGrid;
+
+      var filter = "";
+      if (!filtering)
+        _textField.Text = "";
+      else
+        filter = _textField.Text.ToLower().Trim();
+
+      if (filter == "")
+        filtering = false;
+
       HandleGrid(cubeGrid);
 
       RemoveAllChildren();
@@ -60,6 +115,8 @@ namespace Lima
       View lastView = null;
       foreach (var blgr in _blockGroups)
       {
+        if (filtering && !blgr.Name.ToLower().Contains(filter))
+          continue;
         var bt = new Button($"*{blgr.Name}*", () => SelectBlockGroup(blgr, actionBt));
         bt.BorderColor = darker7;
         bt.Border = border;
@@ -69,8 +126,11 @@ namespace Lima
 
       foreach (var bl in _blocks)
       {
+        var name = bl.DisplayNameText.ToString();
+        if (filtering && !name.ToLower().Contains(filter))
+          continue;
         var same = cubeGrid.EntityId == bl.CubeGrid.EntityId;
-        var bt = new Button(bl.DisplayNameText.ToString(), () => SelectBlock(bl, actionBt));
+        var bt = new Button(name, () => SelectBlock(bl, actionBt));
         bt.BorderColor = same ? darker7 : golden;
         bt.Border = border;
         lastView = AddButton(bt, TouchButtonPadSession.Instance.Api.GetBlockIconSprite(bl), odd, lastView, gray);
@@ -80,16 +140,29 @@ namespace Lima
 
     private View AddButton(Button button, string iconString, int odd, View lastView, Color color)
     {
+      var smallHeight = _padApp.Screen.Surface.SurfaceSize.Y < 128;
+      var smallWidth = _padApp.Screen.Surface.SurfaceSize.X < 128;
+
+      if (smallWidth)
+      {
+        _searchView.Enabled = false;
+      }
+      else
+      {
+        _searchView.Enabled = true;
+        _searchView.Pixels = new Vector2(0, smallHeight ? 14 : 22);
+        _button.Label.FontSize = _textField.Label.FontSize = smallHeight ? 0.4f : 0.6f;
+      }
+
+
       var cols = 2;
       var small = _padApp.Theme.Scale < 1;
-      var height = _padApp.Screen.Surface.SurfaceSize.Y;
-      var smallHeight = height < 128;
-      var smallWidth = _padApp.Screen.Surface.SurfaceSize.X < 128;
+      var height = _padApp.Screen.Surface.SurfaceSize.Y - (Padding.Y + Padding.W) - (_searchView.Enabled ? _searchView.Pixels.Y : 0);
 
       button.Gap = 4;
       button.Padding = new Vector4(4);
       button.Pixels = Vector2.Zero;
-      button.Flex = new Vector2(small ? 1 : 0.5f, 1);
+      button.Flex = new Vector2(small || smallWidth ? 1 : 0.5f, 1);
       button.Label.AutoEllipsis = LabelEllipsis.Left;
       button.Label.AutoBreakLine = true;
       if (smallWidth)
@@ -97,14 +170,14 @@ namespace Lima
         button.Label.Alignment = TextAlignment.CENTER;
         button.Direction = ViewDirection.Column;
         button.Label.FontSize = 0.45f;
-        ScrollBar.Pixels = new Vector2(8, 0);
+        _scrollView.ScrollBar.Pixels = new Vector2(8, 0);
       }
       else
       {
         button.Label.Alignment = TextAlignment.LEFT;
         button.Direction = ViewDirection.Row;
         button.Label.FontSize = 0.6f;
-        ScrollBar.Pixels = new Vector2(24, 0);
+        _scrollView.ScrollBar.Pixels = new Vector2(24, 0);
       }
       if (button.Label.Text.Length > 20)
         button.Label.FontSize = 0.45f;
@@ -122,7 +195,7 @@ namespace Lima
 
       var w = smallWidth ? 72 : 40;
       var h = smallHeight ? ((height / 2) - 2) / _padApp.Theme.Scale : w;
-      if (!small && odd % cols != 0 && lastView != null)
+      if (!small && !smallWidth && odd % cols != 0 && lastView != null)
         lastView.AddChild(button);
       else
       {
@@ -131,12 +204,12 @@ namespace Lima
         view.Flex = new Vector2(1, 0);
         view.Pixels = new Vector2(0, h);
         view.AddChild(button);
-        AddChild(view);
+        _scrollView.AddChild(view);
         _views.Add(view);
         lastView = view;
       }
 
-      _step = (lastView.Pixels.Y + Gap);
+      _step = lastView.Pixels.Y + _scrollView.Gap;
       UpdateScrollStep();
 
       return lastView;
@@ -144,15 +217,15 @@ namespace Lima
 
     public void UpdateScrollStep()
     {
-      ScrollWheelStep = _step * _padApp.Theme.Scale;
+      _scrollView.ScrollWheelStep = _step * _padApp.Theme.Scale;
     }
 
     public void RemoveAllChildren()
     {
-      Scroll = 0;
+      _scrollView.Scroll = 0;
       // TODO: Pool
       foreach (var v in _views)
-        RemoveChild(v);
+        _scrollView.RemoveChild(v);
       _buttons.Clear();
     }
 
